@@ -1,0 +1,97 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Shelter",
+  "mainBinaryName": "Jarvis",
+  "version": "0.1.0-alpha.2",
+  "identifier": "app.jarvis.assistant",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Shelter",
+        "width": 1180,
+        "height": 760,
+        "minWidth": 940,
+        "minHeight": 620,
+        "decorations": false,
+        "transparent": true,
+        "visible": false,
+        "center": true,
+        "backgroundColor": "#00000000"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' ipc: http://ipc.localhost; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost blob: data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "IT Shelter",
+    "shortDescription": "Голосовой ассистент для компьютера",
+    "longDescription": "Голосовой ассистент с локальным распознаванием, настраиваемыми персонажами и управлением компьютером, играми и умным домом.",
+    "category": "Productivity",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../../LICENSE": "LICENSE",
+      "../../THIRD_PARTY.md": "THIRD_PARTY.md",
+      "../../*.py": "core/",
+      "../../config.public.yaml": "core/config.yaml",
+      "../src/lib/builtinModels.json": "core/app/src/lib/builtinModels.json",
+      "../../requirements.txt": "core/requirements.txt",
+      "../../requirements-lock.windows.txt": "core/requirements-lock.windows.txt",
+      "../../requirements-optional.txt": "core/requirements-optional.txt",
+      "../../requirements-tts.txt": "core/requirements-tts.txt",
+      "../../personas/jarvis/persona.json": "core/personas/jarvis/persona.json",
+      "../../personas/anime/persona.json": "core/personas/anime/persona.json",
+      "../../plugins/example.py": "core/plugins/example.py",
+      "../../plugins/README.md": "core/plugins/README.md",
+      "../../tools/portal_screenshot.py": "core/tools/portal_screenshot.py",
+      "../../minecraft/bridge.mjs": "core/minecraft/bridge.mjs",
+      "../../minecraft/game.mjs": "core/minecraft/game.mjs",
+      "../../minecraft/recipes.mjs": "core/minecraft/recipes.mjs",
+      "../../minecraft/acquire.mjs": "core/minecraft/acquire.mjs",
+      "../../minecraft/MINDCRAFT-LICENSE": "core/minecraft/MINDCRAFT-LICENSE",
+      "../../minecraft/MINEPAL-LICENSE": "core/minecraft/MINEPAL-LICENSE",
+      "../../minecraft/package.json": "core/minecraft/package.json",
+      "../../minecraft/package-lock.json": "core/minecraft/package-lock.json",
+      "../../games/minecraft-npc/distribution/shelter-npc-0.2.0.jar": "core/games/minecraft-npc/distribution/shelter-npc-0.2.0.jar",
+      "../../games/minecraft-inventory/distribution/shelter-inventory-0.1.0.jar": "core/games/minecraft-inventory/distribution/shelter-inventory-0.1.0.jar",
+      "../../games/minecraft-carpet/sheltercompanion.sc": "core/games/minecraft-carpet/sheltercompanion.sc",
+      "../../games/factorio/shelter_factorio_0.2.0/": "core/games/factorio/shelter_factorio_0.2.0/",
+      "../../games/hoi4/": "core/games/hoi4/",
+      "../../plugins/catalog/*.zip": "core/plugins/catalog/"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": [
+          "Russian",
+          "English"
+        ],
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "startMenuFolder": "Shelter",
+        "installerHooks": "windows/hooks.nsh"
+      }
+    }
+  }
+}

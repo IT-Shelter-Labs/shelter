@@ -1,0 +1,105 @@
+/* Liquid Glass: цветная атмосфера под читаемыми, неподвижными поверхностями.
+   Blur статичен; прозрачность и движение учитывают настройки доступности. */
+:root[data-material="glass"] {
+  --r-md: 14px;
+  --r-lg: 22px;
+  --glass-edge: rgba(255, 255, 255, .2);
+  --glass-shine: rgba(255, 255, 255, .07);
+  --glass-blur: 8px;
+  --glass-shadow: 0 12px 38px #03091c24, inset 0 1px 0 var(--glass-shine);
+}
+:root[data-material="glass"][data-theme="dark"] {
+  --bg: #0c1524;
+  --bg-2: #111d30;
+  --surface: rgb(20 31 49 / var(--glass-opacity, .3));
+  --surface-solid: #18253a;
+  --surface-2: rgb(29 43 64 / calc(var(--glass-opacity, .3) + .12));
+  --surface-3: rgba(97, 122, 155, .14);
+  --field: rgba(6, 17, 34, .65);
+  --line: rgba(212, 230, 255, .15);
+  --line-2: rgba(226, 238, 255, .26);
+  --text: #f3f6ff;
+  --text-2: #bdcce0;
+  --text-3: #92a8c0;
+  --grid: transparent;
+}
+:root[data-material="glass"][data-theme="light"] {
+  --bg: #eaf0f6;
+  --bg-2: #e0e8f4;
+  --surface: rgb(255 255 255 / var(--glass-opacity, .3));
+  --surface-solid: #f7faff;
+  --surface-2: rgb(255 255 255 / calc(var(--glass-opacity, .3) + .14));
+  --surface-3: rgba(255, 255, 255, .6);
+  --field: rgba(255, 255, 255, .8);
+  --line: rgba(57, 77, 111, .14);
+  --line-2: rgba(57, 77, 111, .25);
+  --text: #182b44;
+  --text-2: #405a78;
+  --text-3: #5e7692;
+  --glass-edge: rgba(255, 255, 255, .92);
+  --glass-shine: #fff;
+  --glass-shadow: 0 12px 40px #536a8a16, inset 0 1px 0 #fff;
+}
+:root[data-material="glass"] body::before { display: none; }
+:root[data-material="glass"][data-desktop-glass="on"] { --bg: transparent; }
+:root[data-material="glass"] .shell { background: transparent; }
+:root[data-material="glass"] .titlebar {
+  background: linear-gradient(110deg, var(--glass-shine), transparent 65%), var(--surface);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
+}
+:root[data-material="glass"] .shell > .body > nav {
+  margin: 12px 0 12px 12px;
+  padding: 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: linear-gradient(145deg, var(--glass-shine), transparent 45%), var(--surface);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+}
+:root[data-material="glass"] .shell > .body > nav button { border-radius: 13px; }
+:root[data-material="glass"] .shell > .body > nav button.active {
+  background: linear-gradient(120deg, var(--glass-shine), transparent), var(--accent-soft);
+  border-color: var(--line-2);
+  box-shadow: inset 0 1px 0 var(--glass-shine), 0 3px 14px #0611290c;
+}
+:root[data-material="glass"] .card {
+  background: linear-gradient(130deg, var(--glass-shine), transparent 40%), var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.12);
+}
+:root[data-material="glass"] .card { border-top-color: var(--glass-edge); border-left-color: var(--glass-edge); }
+:root[data-material="glass"] .dialog.card { background: var(--surface-solid); }
+:root[data-material="glass"] .card .card { backdrop-filter: none; box-shadow: inset 0 1px 0 var(--glass-shine); }
+:root[data-material="glass"] .btn:not(.ghost) { box-shadow: inset 0 1px 0 var(--glass-shine); }
+:root[data-material="glass"] .btn.primary {
+  background: linear-gradient(155deg, #ffffff24, transparent 60%), var(--accent);
+  box-shadow: inset 0 1px 0 #ffffff52, 0 4px 18px var(--accent-soft);
+}
+:root[data-material="glass"] input,
+:root[data-material="glass"] textarea,
+:root[data-material="glass"] select { box-shadow: inset 0 1px 2px #0911220b, 0 1px 0 var(--glass-shine); }
+:root[data-material="glass"] select option { background: var(--surface-solid); color: var(--text); }
+:root[data-material="glass"] .tabs { background: var(--surface); backdrop-filter: blur(var(--glass-blur)); box-shadow: var(--glass-shadow); }
+:root[data-opaque] .card,
+:root[data-opaque] .titlebar,
+:root[data-opaque] .shell > .body > nav,
+:root[data-opaque] .tabs,
+:root[data-lite] .shell > .body > nav,
+:root[data-lite] .titlebar { background: var(--surface-solid) !important; backdrop-filter: none !important; }
+:root[data-lite] .card,
+:root[data-lite] .shell > .body > nav,
+:root[data-lite] .btn { box-shadow: none !important; }
+@supports not (backdrop-filter: blur(1px)) {
+  :root[data-material="glass"] .card,
+  :root[data-material="glass"] .titlebar,
+  :root[data-material="glass"] .shell > .body > nav { background: var(--surface-solid); }
+}
+@media (forced-colors: active) {
+  :root { --surface: Canvas; --surface-solid: Canvas; --field: Canvas; --text: CanvasText; --text-2: CanvasText; --text-3: CanvasText; --line: ButtonBorder; --line-2: ButtonBorder; --accent: Highlight; --accent-2: LinkText; --accent-ink: HighlightText; }
+  .card, .btn, .titlebar { box-shadow: none !important; backdrop-filter: none !important; }
+}
+@media (max-width: 760px) {
+  :root[data-material="glass"] .shell > .body > nav { margin: 8px 0 8px 8px; border-radius: 17px; }
+}

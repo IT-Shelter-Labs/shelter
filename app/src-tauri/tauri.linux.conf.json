@@ -1,0 +1,4 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {"targets": ["deb", "appimage"], "resources": {"../../bin/libjarvis_native.so": "core/bin/libjarvis_native.so"}}
+}

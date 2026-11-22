@@ -1,0 +1,4 @@
+{
+  "builtin_gemma_e2b": {"name": "Gemma 4 E2B", "provider": "ollama", "url": "http://127.0.0.1:11434", "model": "gemma4:e2b", "context": 8192, "share_context": true},
+  "builtin_gemma_e4b": {"name": "Gemma 4 E4B", "provider": "ollama", "url": "http://127.0.0.1:11434", "model": "gemma4:e4b", "context": 8192, "share_context": true}
+}

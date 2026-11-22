@@ -1,0 +1,8 @@
+﻿l_english:
+ shelter_campaign_category:0 "Shelter: Campaign Tasks"
+ shelter_start_reserve:0 "Build an infantry equipment reserve"
+ shelter_start_reserve_desc:0 "Orders one military production line for Infantry Equipment I on the first request. The mission tracks a reserve of 500 units for 90 days. Check the line in Production and the current reserve in Logistics."
+ shelter_reserve_mission:0 "Reserve 500 Infantry Equipment I"
+ shelter_reserve_mission_desc:0 "The game checks the stockpile. The line remains in Production after the mission ends."
+ shelter_stop_reserve:0 "Stop tracking the reserve"
+ shelter_stop_reserve_desc:0 "Cancels this mission. Manage the line in Production."

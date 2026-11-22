@@ -1,0 +1,26 @@
+# Ядро Джарвиса — без PyTorch и без видеокарты (~150 МБ).
+sounddevice
+numpy
+scipy
+PyYAML
+ruamel.yaml
+vosk
+psutil
+soundfile             # образец голоса из WAV/MP3
+Pillow; sys_platform == "linux"   # снимок экрана через X11 / системный портал Wayland
+pymorphy3             # озвучка чисел в нужном падеже и роде («в одной комнате», «до пяти часов»)
+# 1.13.8 — последняя версия со встроенным eSpeak для голоса Piper; в 2.x его убрали.
+sherpa-onnx==1.13.8   # GigaAM v3 (распознавание), Silero VAD, голос Piper, слово-обращение
+sentencepiece         # слово-обращение: разбор своего слова на токены модели
+pycaw; sys_platform == "win32"
+comtypes; sys_platform == "win32"
+websocket-client      # OBS, VTube Studio
+winrt-runtime; sys_platform == "win32"
+winrt-Windows.Media.Control; sys_platform == "win32"
+winrt-Windows.Foundation; sys_platform == "win32"
+winrt-Windows.Foundation.Collections; sys_platform == "win32"
+# «что на экране»: распознавание текста средствами Windows
+winrt-Windows.Media.Ocr; sys_platform == "win32"
+winrt-Windows.Graphics.Imaging; sys_platform == "win32"
+winrt-Windows.Globalization; sys_platform == "win32"
+winrt-Windows.Storage.Streams; sys_platform == "win32"

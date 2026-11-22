@@ -1,0 +1,40 @@
+{
+  "name": "jarvis",
+  "private": true,
+  "version": "0.1.0-alpha.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:bridge": "vite --mode bridge",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test:avatar": "node --experimental-strip-types --test tests/avatar.test.mjs",
+    "test:navigation": "node --experimental-strip-types --test tests/navigation.test.mjs",
+    "test:i18n": "node --experimental-strip-types --test tests/i18n.test.mjs",
+    "tauri": "tauri",
+    "desktop:build": "python ../tools/build_native.py && tauri build --no-bundle --features custom-protocol",
+    "desktop:bundle": "python ../tools/build_native.py && tauri build --features custom-protocol"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@lucide/svelte": "^1.61.0",
+    "@pixiv/three-vrm": "3.5.5",
+    "@pixiv/three-vrm-animation": "3.5.5",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-autostart": "^2.7.0",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-opener": "^2.7.2",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tauri-apps/cli": "^2.12.4",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/three": "0.187.0",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5"
+  }
+}

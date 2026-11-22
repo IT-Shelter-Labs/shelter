@@ -1,0 +1,12 @@
+name: ShelterNpc
+version: 0.2.0
+main: shelter.minecraft.ShelterNpc
+api-version: '1.21.11'
+commands:
+  shelternpc:
+    description: Pair Jarvis, or disconnect its server-side companion
+    usage: /shelternpc pair | stop
+    permission: shelternpc.own
+permissions:
+  shelternpc.own:
+    default: op

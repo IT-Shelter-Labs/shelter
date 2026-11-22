@@ -1,0 +1,12 @@
+name: ShelterInventory
+version: 0.1.0
+main: shelter.minecraft.inventory.ShelterInventory
+api-version: '1.21.5'
+commands:
+  shelterinventory:
+    description: Link and open your Jarvis companion inventory
+    usage: /shelterinventory link <player> | open | unlink
+permissions:
+  shelterinventory.link:
+    description: Link a companion player to your own account
+    default: op

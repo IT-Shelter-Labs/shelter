@@ -1,0 +1,633 @@
+/* Джарвис — дизайн-система.
+   Спокойный футуризм: тёмные стеклянные поверхности, читаемый обычный шрифт,
+   умеренный акцент. Моноширинный — только для технических данных.
+   Темы: data-theme="dark|light" на <html> (системная выбирается в theme.ts),
+   акцент — --accent-h (оттенок), data-motion="reduce", data-lite (без размытия,
+   свечения и сетки — для слабых компьютеров). */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+:root {
+  --font: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono Variable", "Cascadia Code", Consolas, monospace;
+  --accent-h: 194;
+  --accent-s: 68%;
+
+  /* размеры */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --control: 36px;
+  --control-sm: 30px;
+  --control-lg: 44px;
+  --gap: 14px;
+  --page-pad: 26px;
+
+  /* движение */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 140ms;
+  --mid: 240ms;
+}
+
+/* ------------------------------------------------------------ тёмная */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #05090f;
+  --bg-2: #08101a;
+  --surface: rgba(13, 24, 35, 0.82);
+  --surface-solid: #0d1823;
+  --surface-2: #0f1d29;
+  --surface-3: #132533;
+  --field: #08131c;
+  --hover: hsla(var(--accent-h), 80%, 75%, 0.07);
+  --press: hsla(var(--accent-h), 80%, 75%, 0.12);
+  --line: hsla(var(--accent-h), 55%, 60%, 0.14);
+  --line-2: hsla(var(--accent-h), 55%, 60%, 0.28);
+  --text: #e3f3fa;
+  --text-2: #9db8c5;
+  --text-3: #6a8796;
+  --accent: hsl(var(--accent-h), var(--accent-s), 52%);
+  --accent-2: hsl(var(--accent-h), 90%, 74%);
+  --accent-ink: #031119;
+  --accent-soft: hsla(var(--accent-h), 70%, 55%, 0.14);
+  --glow: hsla(var(--accent-h), 70%, 52%, 0.42);
+  --ok: #4fe39a;
+  --warn: #ffb648;
+  --bad: #ff6b6b;
+  --ok-soft: rgba(79, 227, 154, 0.12);
+  --warn-soft: rgba(255, 182, 72, 0.12);
+  --bad-soft: rgba(255, 107, 107, 0.12);
+  --amber: #ffb648;
+  --focus: hsla(var(--accent-h), 90%, 70%, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  --scroll: hsla(var(--accent-h), 80%, 75%, 0.16);
+  --grid: hsla(var(--accent-h), 65%, 50%, 0.035);
+}
+
+/* ------------------------------------------------------------ светлая */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef3f6;
+  --bg-2: #e6edf2;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-solid: #ffffff;
+  --surface-2: #f5f8fa;
+  --surface-3: #eaf0f4;
+  --field: #ffffff;
+  --hover: hsla(var(--accent-h), 60%, 40%, 0.07);
+  --press: hsla(var(--accent-h), 60%, 40%, 0.12);
+  --line: rgba(20, 50, 70, 0.12);
+  --line-2: rgba(20, 50, 70, 0.22);
+  --text: #0e1d27;
+  --text-2: #3f5866;
+  --text-3: #63798a;
+  --accent: hsl(var(--accent-h), var(--accent-s), 38%);
+  --accent-2: hsl(var(--accent-h), 75%, 32%);
+  --accent-ink: #ffffff;
+  --accent-soft: hsla(var(--accent-h), 70%, 42%, 0.12);
+  --glow: hsla(var(--accent-h), 70%, 45%, 0.18);
+  --ok: #148a52;
+  --warn: #a86400;
+  --bad: #c62f3a;
+  --ok-soft: rgba(20, 138, 82, 0.1);
+  --warn-soft: rgba(168, 100, 0, 0.1);
+  --bad-soft: rgba(198, 47, 58, 0.1);
+  --amber: #a86400;
+  --focus: hsla(var(--accent-h), 80%, 40%, 0.45);
+  --shadow-sm: 0 1px 2px rgba(20, 40, 60, 0.12);
+  --shadow: 0 10px 30px rgba(20, 40, 60, 0.14);
+  --scroll: rgba(20, 50, 70, 0.2);
+  --grid: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+body::before {
+  /* Еле заметная сетка, как на HUD (выключается в облегчённом режиме) */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 80%);
+}
+
+#app {
+  height: 100%;
+  position: relative;
+}
+
+::selection {
+  background: hsla(var(--accent-h), 70%, 50%, 0.32);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Видимый фокус для клавиатуры — везде одинаковый */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------- типографика */
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  line-height: 1.25;
+}
+h1 {
+  font-size: 24px;
+}
+h2 {
+  font-size: 18px;
+}
+h3 {
+  font-size: 15px;
+}
+p {
+  margin: 0;
+}
+.mono {
+  font-family: var(--mono);
+}
+/* Подпись раздела — обычный шрифт, не моноширинный */
+.caps {
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.muted {
+  color: var(--text-2);
+}
+.dim {
+  color: var(--text-3);
+}
+.lead {
+  margin: 4px 0 18px;
+  color: var(--text-2);
+  max-width: 720px;
+}
+.selectable,
+.selectable * {
+  user-select: text;
+}
+
+/* ------------------------------------------------------- поверхности */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  backdrop-filter: blur(8px);
+}
+.card + .card {
+  margin-top: var(--gap);
+}
+.card > .caps:first-child,
+.card > .card-head:first-child {
+  margin-bottom: 4px;
+}
+.card.glow {
+  box-shadow: 0 0 0 1px hsla(var(--accent-h), 80%, 75%, 0.06), 0 0 40px hsla(var(--accent-h), 70%, 50%, 0.07) inset;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------- кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--control);
+  min-width: 0;
+  padding: 0 15px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--fast), border-color var(--fast), box-shadow var(--fast), transform var(--fast), color var(--fast);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--press);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
+  box-shadow: 0 0 20px var(--glow);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-2);
+  border-color: transparent;
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+  border-color: transparent;
+}
+.btn.danger {
+  color: var(--bad);
+}
+.btn.danger:hover:not(:disabled) {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+.btn.stop {
+  background: var(--bad);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.stop:hover:not(:disabled) {
+  background: #ff8585;
+}
+.btn.sm {
+  height: var(--control-sm);
+  padding: 0 11px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.btn.lg {
+  height: var(--control-lg);
+  padding: 0 22px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+.btn.icon {
+  width: var(--control);
+  padding: 0;
+}
+.btn.icon.sm {
+  width: var(--control-sm);
+}
+.link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent-2);
+  font: inherit;
+  cursor: pointer;
+}
+.link:hover {
+  text-decoration: underline;
+}
+
+/* ------------------------------------------------------------- поля */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="time"],
+input:not([type]),
+select,
+textarea {
+  height: var(--control);
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  transition: border-color var(--fast), box-shadow var(--fast);
+  user-select: text;
+}
+textarea {
+  height: auto;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.45;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+input[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--bad);
+}
+select option {
+  background: var(--surface-solid);
+  color: var(--text);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+/* Поле формы: подпись, элемент, пояснение и ошибка */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.field > span:first-child {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.field .help {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.field .error {
+  font-size: 12px;
+  color: var(--bad);
+}
+
+/* Строка настройки: подпись слева, элемент справа */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child {
+  border-bottom: none;
+}
+.row .label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.row .label b {
+  font-weight: 600;
+}
+.row .label span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+
+details > summary {
+  cursor: pointer;
+  color: var(--accent-2);
+  padding: 10px 0;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+/* ----------------------------------------------------- метки и статусы */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  max-width: 100%;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  font-size: 12px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip .dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.chip.ok .dot {
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+}
+.chip.warn .dot {
+  background: var(--warn);
+}
+.chip.bad .dot {
+  background: var(--bad);
+}
+.chip.ok {
+  border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+}
+.chip.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  color: var(--warn);
+}
+.chip.bad {
+  border-color: color-mix(in srgb, var(--bad) 40%, transparent);
+  color: var(--bad);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent-2);
+}
+.badge.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.badge.warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.badge.bad {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.badge.plain {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+/* Сообщение: подсказка, предупреждение, ошибка */
+.notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--accent-soft);
+  font-size: 13px;
+}
+.notice.warn {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: var(--warn-soft);
+}
+.notice.bad {
+  border-color: color-mix(in srgb, var(--bad) 40%, transparent);
+  background: var(--bad-soft);
+}
+.notice.ok {
+  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+  background: var(--ok-soft);
+}
+
+/* Пустое состояние: что здесь будет и что сделать */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 26px 16px;
+  text-align: center;
+  color: var(--text-2);
+}
+.empty b {
+  color: var(--text);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+}
+
+.fade-in {
+  animation: fade-in 260ms var(--ease) both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+kbd {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line-2);
+  background: var(--field);
+  color: var(--accent-2);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------- уменьшение движения и лёгкий режим */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-lite] .card,
+:root[data-lite] .titlebar,
+:root[data-lite] * {
+  backdrop-filter: none !important;
+}
+:root[data-lite] body::before {
+  display: none;
+}
+:root[data-lite] .btn.primary,
+:root[data-lite] .card.glow {
+  box-shadow: none;
+}
+:root[data-lite] .card {
+  background: var(--surface-solid);
+}
+
+@media (max-width: 760px) {
+  :root {
+    --page-pad: 14px;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .row {
+    flex-wrap: wrap;
+  }
+}

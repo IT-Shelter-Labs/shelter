@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-minecraft-companion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test" },
+  "overrides": { "uuid": "11.1.1" },
+  "dependencies": {
+    "mineflayer": "4.39.0",
+    "mineflayer-pathfinder": "2.4.5"
+  }
+}

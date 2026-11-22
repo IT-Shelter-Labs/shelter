@@ -1,0 +1,20 @@
+[package]
+name = "jarvis-native"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+name = "jarvis_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Foundation", "Foundation_Collections", "Media_Control", "Win32_System_WinRT"] }
+
+[profile.release]
+lto = "thin"
+strip = true
+

@@ -1,0 +1,11 @@
+# Необязательные модули Джарвиса.
+
+# Детектор звука открывания банки (свой датасет и train.py):
+librosa
+scikit-learn
+joblib
+
+# Старый запасной голос silero (вместо Piper; тянет PyTorch ~1 ГБ):
+# pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch
+omegaconf

@@ -1,0 +1,213 @@
+# Джарвис — настройки по умолчанию для публичной версии.
+#
+# Почти всё меняется в приложении «Джарвис» (окно у часов в трее): оно
+# сохраняет выбранное в data/settings.json, а этот файл остаётся основой.
+# Здесь — то, чего нет в окне: свои голосовые команды, профили, сценарии.
+
+audio:
+  sample_rate: 32000
+  device: null            # микрофон выбирается в приложении
+  echo_cancel: false      # «пользуюсь колонками»: вычитать из микрофона звук компьютера (компонент aec)
+
+tts:
+  # piper — лёгкий голос на процессоре (models/piper/<голос>);
+  # clone — клонированный голос по своему образцу (нужна видеокарта NVIDIA, см. README).
+  engine: piper
+  piper:
+    voice: ruslan         # ruslan | dmitri | denis | irina
+    speed: 1.0
+  speaker: aidar
+  silero:
+    model: v5_6_ru
+    threads: 2
+  reply_sentences: 3      # полный ответ остаётся в окне; 0 — читать всё
+  pronunciations: {}
+  stress: {}             # только Silero: {звонит: "звон+ит"}
+  clone:
+    auto_repair: true    # восстановить движок и официальную модель при запуске
+    model: "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
+    reference: ""         # свой образец голоса: WAV 5–15 секунд чистой речи
+    reference_text: ""    # точная расшифровка образца
+    language: Russian
+    chunk: 6
+    port: 8766
+    temperature: 0.7      # 0.9 — живее, но голос «гуляет»; на замерах 0.7 ближе всего к прежнему голосу
+    wait: 45              # секунд ждать загрузки клона после запуска, а не говорить запасным голосом
+
+detector:
+  enabled: false          # звук открывания банки — нужна своя обученная модель (train.py)
+  model_path: models/can_model.pkl
+  requires_wake: true
+  threshold: 0.8
+  onset_factor: 10.0
+  refractory: 2.0
+  cooldown: 10
+  log_clip_threshold: 0.5
+
+wake:
+  model_path: models/vosk-ru
+  words: ["джарвис", "джарвес", "жарвис"]
+  engine: kws             # kws — лёгкий поиск имени (models/kws-ru), любое русское слово | vosk — прежний
+  sensitivity: 0.5        # kws: выше — слышит невнятное имя, но чаще ошибается
+  follow_up: 12           # секунды разговора без повторного «Джарвис»
+  close_after_action: false
+  earcon: true            # короткий сигнал сразу на обращение
+  duck: 0.3               # громкость игр и музыки, пока Джарвис слушает (1 — не трогать)
+  barge_in: true          # перебить ответ: «хватит», «стоп», «Джарвис»
+  hotkey: "Ctrl+Alt+J"    # кнопка «говорить» (push-to-talk): как сказать «Джарвис»; пусто — выключено
+  owner:                  # узнавание хозяина по голосу (запись голоса — в приложении)
+    enabled: false
+    mode: soft            # soft — гостю только вопросы; strict — гостя не слушать
+    threshold: 0.46       # выше — строже к чужим, но может не узнать вас
+  quick: true             # без имени, если что-то играет: «пауза», «дальше», «громче»
+  vad:
+    enabled: true
+    engine: silero        # silero — нейросеть, отличает голос от шума | energy — порог громкости
+    threshold: 0.5
+    factor: 2.5
+    hangover: 0.45
+  actions:
+    - type: overlay
+      seconds: 0
+      text: "AWAITING ORDERS"
+    - type: say
+      text: "Да, сэр."
+
+asr:
+  engine: gigaam          # gigaam — точное распознавание от Сбера | vosk — быстрое
+  model: models/gigaam-v3
+  threads: 2
+
+llm:
+  enabled: true
+  provider: "ollama"      # ollama | openai (LM Studio, llama.cpp) | anthropic
+  url: "http://127.0.0.1:11434"
+  model: "gemma4:e4b"     # мастер подберёт под видеокарту
+  keep_alive: "30m"
+  commands: true
+  action_plans: true     # разбирать незнакомые формулировки в проверяемых цепочках
+  memory_minutes: 5
+  max_tokens: 300
+  temperature: 0.4
+  timeout: 60
+  context: 8192
+  memory:
+    recent_turns: 8
+    semantic: false      # включить после загрузки embeddinggemma в настройках памяти
+    embedding:
+      url: http://127.0.0.1:11434
+      model: embeddinggemma
+  connections: {}        # именованные подключения добавляются в приложении
+  routes: {}             # conversation/task: id подключения; без них — настройки выше
+  agent:
+    protocol: auto       # native — структурированные инструменты | tags — совместимость
+    max_steps: 6
+    timeout: 90
+    model: ""            # необязательная модель того же сервера для сложных задач
+  tools: [app, weather, search, timer, home, memory, media, obs, pc, screen]
+  vision: true            # «что на экране»: снимок окна получает модель, которая видит картинки
+  # system: "свой характер ассистента; без этой строки — классический Джарвис"
+
+gaming:
+  brief: true
+  keep_alive: "3m"
+
+location:
+  city: auto
+
+search:
+  provider: duckduckgo    # duckduckgo — без ключа | brave — ключ в приложении | searxng
+  results: 5
+
+obs:
+  url: "ws://127.0.0.1:4455"
+  password_env: OBS_PASSWORD
+
+discord:
+  mute: "ctrl+shift+f9"   # задайте эти же клавиши в Discord: Настройки -> Горячие клавиши
+  deafen: "ctrl+shift+f10"
+
+smarthome:
+  enabled: false
+  homeassistant:
+    url: "http://homeassistant.local:8123"
+    token_env: HA_TOKEN
+    auto: true
+  yandex:
+    token_env: YANDEX_IOT_TOKEN
+    auto: false
+  devices: []
+
+confirm:
+  accept: ["да", "подтверждаю", "давай", "конечно", "ага", "угу", "включай", "запускай", "можно", "хочу", "ок", "окей", "валяй", "пожалуйста"]
+  reject: ["нет", "отмена", "не надо"]
+  timeout: 20
+
+security:
+  allow_shell: false
+  allow_plugins: false
+
+companion:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8765
+
+control:
+  port: 8770
+
+performance:
+  profile: balanced
+
+integrations:
+  enabled: false
+  servers: []            # настраиваются в «Возможностях»: MCP stdio / Streamable HTTP
+
+ui:
+  mode: hud
+  hud: rust
+  fps: 60
+  layout: auto            # auto | full | orb
+  busy: orb               # orb — кругляш в углу | monitor — другой монитор
+  corner: bottom-right
+  busy_apps: []
+  vtube_studio:
+    path: ""
+    autostart: false
+    url: "ws://127.0.0.1:8001"
+    reactions:
+      listening: "jarvis_listening"
+      speaking: "jarvis_speaking"
+      idle: "jarvis_idle"
+
+profiles: {}
+
+triggers: {}
+
+# Свои голосовые команды: ключевые слова -> действия. Срабатывают мгновенно,
+# без нейросети. Типы действий: say, overlay, close, url, launch, media,
+# profile, settings — см. README.
+commands:
+  - keywords: ["включи музыку", "продолжи воспроизведение"]
+    description: "Включить воспроизведение"
+    whole: true
+    actions: [{type: media, key: play}]
+  - keywords: ["останови музыку", "останови воспроизведение"]
+    description: "Остановить воспроизведение"
+    whole: true
+    actions: [{type: media, key: stop}]
+  - keywords: ["настройки", "настройки джарвиса"]
+    description: "открыть окно настроек Джарвиса"
+    actions:
+      - type: settings
+  - keywords: ["спасибо", "свободен", "пока", "отбой", "закрой", "до свидания"]
+    whole: true           # только вся фраза: «закрой телеграм» — про окно, «спасибо, а ещё…» — не прощание
+    description: "закончить разговор"
+    actions:
+      - type: say
+        text: "Всегда к вашим услугам, сэр."
+      - type: close
+  - keywords: ["что ты умеешь", "что умеешь", "твои возможности"]
+    description: "рассказать, что умеет Джарвис"
+    actions:
+      - type: say
+        text: "Сэр, я открываю программы и игры, управляю окнами, громкостью и Дискордом, ставлю таймеры и напоминания, рассказываю погоду и новости, ищу в интернете, читаю и перевожу то, что на экране, печатаю под диктовку, слежу за музыкой и управляю умным домом. Просто скажите, что нужно."

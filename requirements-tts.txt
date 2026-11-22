@@ -1,0 +1,11 @@
+# Окружение для голоса Джарвиса (необязательное, нужна видеокарта NVIDIA).
+# Ставится отдельно от основного, чтобы ассистент не зависел от CUDA и
+# гигабайтов зависимостей — без него он работает на записях и silero:
+#
+#   py -3.12 -m venv .venv-tts
+#   .venv-tts\Scripts\pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu128
+#   .venv-tts\Scripts\pip install -r requirements-tts.txt
+faster-qwen3-tts==0.5.4
+# 5.15.1 проверена: в более новых сломан загрузчик токенизатора речи Qwen3-TTS
+transformers==5.15.1
+soundfile
