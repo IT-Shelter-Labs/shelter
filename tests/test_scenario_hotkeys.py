@@ -2,8 +2,8 @@ import queue
 import types
 import unittest
 from unittest.mock import patch
-import scenario_hotkeys
-import triggers
+from shelter_core import scenario_hotkeys
+from shelter_core import triggers
 
 
 class ScenarioHotkeys(unittest.TestCase):
@@ -17,7 +17,7 @@ class ScenarioHotkeys(unittest.TestCase):
         item = {"id":"demo", "name":"Демо", "enabled":True, "cooldown":30, "triggers":[{"type":"hotkey","combo":"Ctrl+F9"}]}
         events = queue.Queue()
         with patch.object(triggers.scenarios, "load", return_value=[item]), patch.object(triggers.scenarios, "PLATFORM", "windows"), \
-             patch.object(triggers.Engine, "_load_state", return_value={}), patch.object(triggers.Engine, "_save_state"), patch("bus.publish"):
+             patch.object(triggers.Engine, "_load_state", return_value={}), patch.object(triggers.Engine, "_save_state"), patch("shelter_core.bus.publish"):
             engine = triggers.Engine(events, {})
             engine._hotkey("demo:Ctrl+F9", ""); engine.hotkey_step()
             self.assertEqual(events.get_nowait()[1]["id"], "demo")
@@ -32,7 +32,7 @@ class ScenarioHotkeys(unittest.TestCase):
         with patch.object(triggers.scenarios, "load", return_value=[]), patch.object(triggers.Engine, "_load_state", return_value={}):
             engine = triggers.Engine(events, {})
         engine.rules = [({"id":"demo","name":"Демо"}, {"type":"hotkey","combo":"Ctrl+F9"})]
-        with patch("bus.publish"):
+        with patch("shelter_core.bus.publish"):
             engine._hotkey("demo:Ctrl+F9", "Сочетание занято"); engine.hotkey_step()
         self.assertIn("занято", engine.log[0]["result"])
         self.assertTrue(events.empty())

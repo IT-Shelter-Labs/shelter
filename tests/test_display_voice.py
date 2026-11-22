@@ -9,9 +9,9 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import display  # noqa: E402
-import fastpath  # noqa: E402
-import voice  # noqa: E402
+from shelter_core import display  # noqa: E402
+from shelter_core import fastpath  # noqa: E402
+from shelter_core import voice  # noqa: E402
 
 
 def calls(text, mode="hud"):
@@ -47,8 +47,9 @@ class Fullscreen(unittest.TestCase):
                              {"ui": {"mode": "hud"}, "llm": {"tools": ["media", "pc"]}})
         self.assertEqual([c for c, _ in plan], [[("media", "pause")], [("pc", "fullscreen | off")]])
 
+    @unittest.skipUnless(os.name == "nt", "Windows fullscreen shortcut")
     def test_fullscreen_sends_escape(self):
-        import main
+        from shelter_core import main
         with patch.object(main.pc, "send_keys") as keys:
             main.pc_tool({}, "выйди из полноэкранного | off")
         keys.assert_called_once_with("esc")
@@ -82,7 +83,7 @@ class CleanTakes(unittest.TestCase):
 
 class AnimeDefault(unittest.TestCase):
     def test_own_persona_wins_alias_tie(self):
-        import personas
+        from shelter_core import personas
         builtin = {"id": "anime", "name": "Юки", "aliases": ["аниме тянка"], "builtin": True}
         own = {"id": "pippa", "name": "Пиппа", "aliases": ["аниме тянка"], "builtin": False}
         with patch.object(personas, "all_personas", return_value=[builtin, own]):
@@ -97,7 +98,7 @@ if __name__ == "__main__":
 
 class ReliablePause(unittest.TestCase):
     def test_pause_retried_until_player_stops(self):
-        import media
+        from shelter_core import media
         # Первая проверка — есть ли плеер, потом 4 проверки после паузы: всё ещё играет.
         states = iter([True] * 5 + [False])
         sent = []
@@ -110,7 +111,7 @@ class ReliablePause(unittest.TestCase):
         self.assertIn("toggle", sent, "не встала пауза — повторить переключателем")
 
     def test_already_paused_is_not_toggled_back(self):
-        import media
+        from shelter_core import media
         sent = []
         with patch.object(media, "now_playing", return_value={"playing": False}), \
              patch.object(media, "control", side_effect=lambda action: sent.append(action) or False), \
@@ -119,14 +120,14 @@ class ReliablePause(unittest.TestCase):
         self.assertNotIn("toggle", sent)
 
     def test_nothing_playing_is_reported(self):
-        import media
+        from shelter_core import media
         with patch.object(media, "now_playing", return_value=None):
             self.assertFalse(media.ensure("pause"))
 
 
 class ImportedPersonaLines(unittest.TestCase):
     def test_lines_are_full_sentences_with_clean_name(self):
-        import personas
+        from shelter_core import personas
         lines = personas.character_lines("Яманэко — белая", "f", "хозяин")
         self.assertEqual(lines["switch_reply"], "Хорошо, хозяин! Теперь я Яманэко, ваша помощница. Чем займёмся?")
         self.assertEqual(lines["wake_reply"], "Да, хозяин?")
@@ -141,7 +142,7 @@ class Presence(unittest.TestCase):
         self.assertEqual(calls("появись")[0], [("display", "appear")])
 
     def test_dismiss_hides_avatar_even_if_always_on_screen(self):
-        from avatar import AVATAR
+        from shelter_core.avatar import AVATAR
         published = []
         old = AVATAR.config
         AVATAR.config = {"mode": "avatar", "persona": {"always": True, "options": {}}}

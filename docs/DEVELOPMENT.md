@@ -120,3 +120,9 @@ cargo test --manifest-path app/src-tauri/Cargo.toml
 | Дополнения | `plugins_manager.py`, `plugin_host.py` |
 | Пакеты персонажей | `persona_package.py` |
 | Применение настроек без перезапуска | `settings_live.py` |
+
+## Модули ядра
+
+Python-код находится в `shelter_core/`. Точки входа `python main.py` и
+`python setup_tool.py` остаются в корне. Для диагностических модулей из корня
+используйте `python -m shelter_core.<модуль>`.

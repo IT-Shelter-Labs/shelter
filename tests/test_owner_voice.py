@@ -9,8 +9,8 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import main  # noqa: E402
-import speaker  # noqa: E402
+from shelter_core import main  # noqa: E402
+from shelter_core import speaker  # noqa: E402
 
 
 class OwnerVoice(unittest.TestCase):

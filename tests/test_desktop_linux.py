@@ -3,7 +3,7 @@ import subprocess
 import unittest
 from unittest.mock import patch
 
-import desktop_linux as desktop
+from shelter_core import desktop_linux as desktop
 
 
 class LinuxDesktopTests(unittest.TestCase):
@@ -58,7 +58,7 @@ class LinuxDesktopTests(unittest.TestCase):
         self.assertEqual(marker, "")
 
     def test_runtime_capabilities_are_shared_by_plan_and_editor(self):
-        import scenarios
+        from shelter_core import scenarios
         with patch.object(scenarios, "PLATFORM", "linux"), patch.object(desktop, "capabilities", return_value={"keys": True}):
             self.assertTrue(scenarios.supported("keys", scenarios.ACTIONS["keys"]))
             registry = scenarios.registry_for_platform(scenarios.ACTIONS)

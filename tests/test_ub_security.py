@@ -10,11 +10,11 @@ from http.server import ThreadingHTTPServer
 from unittest.mock import patch
 
 import numpy as np
-import smarthome
-import tasks
-import tts_server
-import tts_auth
-import voice
+from shelter_core import smarthome
+from shelter_core import tasks
+from shelter_core import tts_server
+from shelter_core import tts_auth
+from shelter_core import voice
 
 
 class DeviceBoundaryTests(unittest.TestCase):

@@ -11,14 +11,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import unittest
 from unittest.mock import patch
 
-import actions
-import agent_runtime as agent
-import assistant_api
-import assistant_store as store
-import integrations
-import memory
-import tasks
-import fastpath
+from shelter_core import actions
+from shelter_core import agent_runtime as agent
+from shelter_core import assistant_api
+from shelter_core import assistant_store as store
+from shelter_core import integrations
+from shelter_core import memory
+from shelter_core import tasks
+from shelter_core import fastpath
 
 
 class AssistantTests(unittest.TestCase):
@@ -246,7 +246,7 @@ for line in sys.stdin:
         finally:server.shutdown();server.server_close();thread.join(1)
 
     def test_mobile_ask_auth_and_session(self):
-        import companion
+        from shelter_core import companion
         events=queue.Queue()
         with patch.object(companion,"_token",return_value="test-companion"):
             server=companion.CompanionServer({"companion":{"enabled":True,"port":0,"host":"127.0.0.1"}},events)
@@ -265,7 +265,7 @@ for line in sys.stdin:
     def test_training_manifest_has_no_train_holdout_overlap(self):
         import numpy as np
         import soundfile
-        from prepare_voice_training import prepare
+        from shelter_core.prepare_voice_training import prepare
         corpus=self.root/"corpus";corpus.mkdir()
         soundfile.write(corpus/"reference.wav",np.zeros(24000),8000)
         lines=[]

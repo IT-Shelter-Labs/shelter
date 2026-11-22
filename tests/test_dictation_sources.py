@@ -7,9 +7,9 @@ from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import fastpath  # noqa: E402
-import llm  # noqa: E402
-import tools  # noqa: E402
+from shelter_core import fastpath  # noqa: E402
+from shelter_core import llm  # noqa: E402
+from shelter_core import tools  # noqa: E402
 
 
 class DictationTag(unittest.TestCase):
@@ -47,7 +47,7 @@ class SearchSources(unittest.TestCase):
 
 class PushToTalk(unittest.TestCase):
     def test_voice_exposes_arm_event(self):
-        import voice
+        from shelter_core import voice
         voice.ARM.clear()
         voice.ARM.set()
         self.assertTrue(voice.ARM.is_set())

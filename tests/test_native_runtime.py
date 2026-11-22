@@ -1,11 +1,12 @@
 import io
+import os
 import unittest
 from unittest.mock import patch
 import numpy as np
-import native_runtime as native
-import audio_io
-import audio
-import media
+from shelter_core import native_runtime as native
+from shelter_core import audio_io
+from shelter_core import audio
+from shelter_core import media
 
 
 class MediaSelection(unittest.TestCase):
@@ -20,9 +21,14 @@ class MediaSelection(unittest.TestCase):
         self.assertEqual(media._select(items,True)["app"],"Spotify")
 
     def test_controls_keep_exact_source_and_do_not_touch_current_browser(self):
-        with patch.object(media.native_runtime,"media_control",return_value=True) as control:
-            self.assertTrue(media.control("pause","Spotify.exe"))
-        control.assert_called_once_with("pause","Spotify.exe")
+        if os.name == "nt":
+            with patch.object(media.native_runtime, "media_control", return_value=True) as control:
+                self.assertTrue(media.control("pause", "Spotify.exe"))
+            control.assert_called_once_with("pause", "Spotify.exe")
+        else:
+            with patch.object(media, "_playerctl", return_value="") as control:
+                self.assertTrue(media.control("pause", "spotify"))
+            control.assert_called_once_with("--player", "spotify", "pause")
 
     def test_media_buttons_do_not_run_through_the_language_model(self):
         from pathlib import Path

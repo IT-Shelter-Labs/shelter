@@ -10,17 +10,17 @@ from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
-import actions
-import fastpath
-import llm
-import main
-import policy
-import scheduler
-import smarthome
-import speech_text
-import tasks
-import voice
-from audio import LISTENING, SPEAKING
+from shelter_core import actions
+from shelter_core import fastpath
+from shelter_core import llm
+from shelter_core import main
+from shelter_core import policy
+from shelter_core import scheduler
+from shelter_core import smarthome
+from shelter_core import speech_text
+from shelter_core import tasks
+from shelter_core import voice
+from shelter_core.audio import LISTENING, SPEAKING
 
 
 class Regressions(unittest.TestCase):
@@ -179,7 +179,7 @@ class Regressions(unittest.TestCase):
             def PartialResult(self): return json.dumps({"partial": "джарвис"})
             def Result(self): return json.dumps({"text": "джарвис длинная просьба"})
         fake = types.SimpleNamespace(Model=lambda p: None, KaldiRecognizer=Recognizer, SetLogLevel=lambda n: None)
-        import asr
+        from shelter_core import asr
         config = {"wake": {"model_path": "unused", "words": ["джарвис"], "vad": False, "follow_up": 3},
                   "asr": {"engine": "vosk"}, "llm": {"enabled": False}}
         events = queue.Queue()
@@ -233,7 +233,7 @@ class Regressions(unittest.TestCase):
             self.assertEqual(main.run_tool(config, "home", "лампа | on")[0], "say")
 
     def test_native_sample_rate_fallback(self):
-        import audio
+        from shelter_core import audio
         stream = types.SimpleNamespace(start=lambda: None)
         with patch.object(audio.sd, "InputStream", side_effect=[audio.sd.PortAudioError("rate"), stream]), \
              patch.object(audio.sd, "query_devices", return_value={"default_samplerate": 48000}):
@@ -244,7 +244,7 @@ class Regressions(unittest.TestCase):
 
     def test_control_rejects_nonobject_and_oversized_body(self):
         import http.client
-        import control
+        from shelter_core import control
         with patch.object(control, "_token", return_value="unit-test-token"):
             server = control.ControlServer({"control": {"port": 0}}, queue.Queue(), None, lambda: {"ok": True})
             server.start()

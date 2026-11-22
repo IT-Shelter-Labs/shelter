@@ -12,9 +12,9 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import companion  # noqa: E402
-import companion_devices as devices  # noqa: E402
-import telegram_bot  # noqa: E402
+from shelter_core import companion  # noqa: E402
+from shelter_core import companion_devices as devices  # noqa: E402
+from shelter_core import telegram_bot  # noqa: E402
 
 
 class Sandbox(unittest.TestCase):
@@ -123,7 +123,7 @@ class Telegram(Sandbox):
         self.assertTrue(self.events.empty())
         code = devices.pairing_code()["code"]
         self.assertEqual(self.bot.handle(self.msg(7, f"/start {code}")), "подключено")
-        with patch("assistant_store.session_for", return_value="s"):
+        with patch("shelter_core.assistant_store.session_for", return_value="s"):
             self.assertEqual(self.bot.handle(self.msg(7, "который час")), "передано")
         self.assertEqual(self.events.get_nowait()[1]["text"], "который час")
         self.assertEqual(self.bot.handle(self.msg(5, "/stop")), "чужой", "чужой не останавливает")

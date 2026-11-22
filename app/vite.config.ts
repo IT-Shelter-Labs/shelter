@@ -3,6 +3,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import http from "node:http";
+import { APP_VERSION } from "./src/lib/version";
 
 const host = process.env.TAURI_DEV_HOST;
 // npm run dev:bridge — окно в обычном браузере на данных тестового стенда ядра
@@ -40,10 +41,11 @@ function devBridge(): Plugin {
         const { command, args } = JSON.parse(Buffer.concat(chunks).toString("utf-8") || "{}");
         const reply = (status: number, data: unknown) => { res.statusCode = status; res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify(data)); };
         try {
-          if (command === "app_info") return reply(200, { version: "0.1.0-alpha.2-dev", root: resolve(import.meta.dirname, ".."), onboarded: true, minimized: false, platform: "windows" });
+          if (command === "app_info") return reply(200, { version: APP_VERSION + "-dev", root: resolve(import.meta.dirname, ".."), onboarded: true, minimized: false, platform: "windows" });
           if (command === "avatar_portrait") {
-            const preview = resolve(import.meta.dirname, "../personas/anime/preview.png");
-            if (typeof args.path !== "string" || resolve(args.path) !== preview) return reply(404, { error: "Portrait unavailable" });
+            const previews = ["anime", "pippa", "manju", "tsukuyomi", "cute"].map(id => resolve(import.meta.dirname, `../personas/${id}/preview.png`));
+            const preview = typeof args.path === "string" ? previews.find(path => path === resolve(args.path)) : undefined;
+            if (!preview) return reply(404, { error: "Portrait unavailable" });
             res.writeHead(200, { "Content-Type": "image/png" });
             return res.end(readFileSync(preview));
           }

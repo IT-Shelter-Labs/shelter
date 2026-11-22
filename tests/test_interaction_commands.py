@@ -9,19 +9,19 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-import avatar_motion
-from avatar import AvatarController
-import bus
-import fastpath
-import main
-import personas
-import voice
-from audio import LISTENING
+from shelter_core import avatar_motion
+from shelter_core.avatar import AvatarController
+from shelter_core import bus
+from shelter_core import fastpath
+from shelter_core import main
+from shelter_core import personas
+from shelter_core import voice
+from shelter_core.audio import LISTENING
 
 
 class InteractionCommands(unittest.TestCase):
     def test_llm_persona_switch_also_continues_dialogue(self):
-        import tasks
+        from shelter_core import tasks
         def switch(*args):
             tasks.continue_dialogue()
             return "Снова к вашим услугам."
@@ -32,7 +32,7 @@ class InteractionCommands(unittest.TestCase):
         with patch.object(fastpath, "handle", return_value=None), patch.object(fastpath, "plan", return_value=None), \
                 patch.object(main, "switch_persona", side_effect=switch), patch.object(main.llm, "respond", side_effect=respond), \
                 patch.object(voice, "speak_stream", side_effect=lambda s: list(s)), patch.object(main, "run_action") as action, \
-                patch("gaming.busy", return_value=False), patch.object(bus, "publish"), tasks.scope(tasks.Token()):
+                patch("shelter_core.gaming.busy", return_value=False), patch.object(bus, "publish"), tasks.scope(tasks.Token()):
             tasks.run(lambda: main.answer(cfg, "верни привычного помощника"))
         self.assertTrue(voice.RESUME.is_set())
         self.assertNotIn("close", [c.args[0]["type"] for c in action.call_args_list])
@@ -41,7 +41,7 @@ class InteractionCommands(unittest.TestCase):
     def test_stop_cancels_dance_instead_of_legacy_farewell(self):
         config = {"ui": {"mode": "avatar"}, "persona": {"id": "pippa"}}
         controller = AvatarController()
-        with patch("avatar.AVATAR", controller), patch("gaming.busy", return_value=False), \
+        with patch("shelter_core.avatar.AVATAR", controller), patch("shelter_core.gaming.busy", return_value=False), \
                 patch.object(bus, "publish") as publish, patch.object(voice, "stop_speaking"), \
                 patch.object(avatar_motion.BEAT, "stop"):
             controller.configure(config)
@@ -105,7 +105,7 @@ class PersonaSize(unittest.TestCase):
                     patch.object(personas, "ACTIVE_PATH", str(root / "active.json")):
                 p = personas.save({"id": "pippa", "name": "Pippa", "avatar": {"type": "vrm", "scale": 1}})
                 config = {"persona": personas.public(p)}
-                with patch("avatar.AVATAR") as controller, patch.object(bus, "publish"):
+                with patch("shelter_core.avatar.AVATAR") as controller, patch.object(bus, "publish"):
                     controller.builtin = True
                     avatar_motion.resize(config, .1)
                     self.assertEqual(config["persona"]["avatar"]["scale"], 1.1)
@@ -135,7 +135,7 @@ class PersonaSize(unittest.TestCase):
 
     def test_size_200_then_double_is_persisted_and_limits_are_explicit(self):
         with tempfile.TemporaryDirectory() as temp, patch.object(personas, "ACTIVE_PATH", str(Path(temp)/"active.json")), \
-                patch("avatar.AVATAR") as controller, patch.object(bus, "publish"), patch.object(personas, "get", return_value={"id":"test","name":"Test"}):
+                patch("shelter_core.avatar.AVATAR") as controller, patch.object(bus, "publish"), patch.object(personas, "get", return_value={"id":"test","name":"Test"}):
             controller.builtin=True
             config={"persona":{"id":"test","avatar":{"scale":1}}}
             avatar_motion.resize(config, scale=2)
@@ -149,7 +149,7 @@ class PersonaSize(unittest.TestCase):
 
 class Startup(unittest.TestCase):
     def test_cancelled_clone_does_not_switch_to_fallback(self):
-        import tasks
+        from shelter_core import tasks
         for broken in (False, True):
             token = tasks.Token()
             def cancelled(*args):
@@ -170,7 +170,7 @@ class Startup(unittest.TestCase):
         def synthesize(text):
             calls.append(text)
             voice.cancel_preparation()
-            import tasks
+            from shelter_core import tasks
             tasks.check()
         with patch.object(voice, "_cache_path", return_value="missing-cache.wav"), \
                 patch.object(voice, "synthesize", side_effect=synthesize), \
@@ -182,7 +182,7 @@ class Startup(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "Windows console behaviour")
     def test_os_popen_probe_does_not_create_a_console(self):
-        code = ("from background_process import hide_child_consoles; hide_child_consoles(); "
+        code = ("from shelter_core.background_process import hide_child_consoles; hide_child_consoles(); "
                 "import os,subprocess,sys; "
                 "cmd=subprocess.list2cmdline([sys.executable,'-c','import ctypes; print(ctypes.windll.kernel32.GetConsoleWindow())']); "
                 "print(os.popen(cmd).read().strip())")

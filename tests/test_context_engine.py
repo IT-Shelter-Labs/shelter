@@ -9,15 +9,15 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 
-import agent_runtime
-import assistant_api
-import assistant_store as store
-import context_engine as engine
-import llm
-import llm_connections as connections
-import semantic_memory
-import tasks
-import companion
+from shelter_core import agent_runtime
+from shelter_core import assistant_api
+from shelter_core import assistant_store as store
+from shelter_core import context_engine as engine
+from shelter_core import llm
+from shelter_core import llm_connections as connections
+from shelter_core import semantic_memory
+from shelter_core import tasks
+from shelter_core import companion
 
 
 class ContextTests(unittest.TestCase):

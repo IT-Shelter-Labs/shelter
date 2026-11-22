@@ -2,7 +2,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-import desktop_intent as intent
+from shelter_core import desktop_intent as intent
 
 CONFIG = {"llm": {"enabled": True, "tools": ["pc"], "provider": "ollama", "model": "test"}}
 
@@ -77,8 +77,8 @@ class SemanticInput(unittest.TestCase):
             model.assert_called_once()
 
     def test_classifier_fits_short_commands_at_supported_2k_context(self):
-        import llm
-        import context_engine
+        from shelter_core import llm
+        from shelter_core import context_engine
         def provider(messages, cfg, timeout):
             context_engine.bound_messages(messages, cfg)
             self.assertEqual(cfg["context"], 2048)
@@ -88,28 +88,28 @@ class SemanticInput(unittest.TestCase):
         self.assertEqual(result["decision"], "execute")
 
     def test_clarification_answer_gets_only_the_bounded_question_context(self):
-        import desktop_input
+        from shelter_core import desktop_input
         clarify=json.dumps({"decision":"clarify","confidence":0.9,"command":{},"question":"Левой или правой?"})
         with patch.object(intent,"_generate",return_value=clarify):
             self.assertEqual(intent.Request("Нажми ту кнопку",CONFIG).inspect()["decision"],"clarify")
         with patch.object(intent,"_generate",return_value=decision({"operation":"click","button":"right","count":1})) as model:
             self.assertEqual(intent.Request("правой",CONFIG).authorize("click")[0],"execute")
             self.assertEqual(model.call_args.args[2]["clarification"],{"utterance":"Нажми ту кнопку","question":"Левой или правой?"})
-        intent._clarification={"utterance":"old","question":"old","owner":None,"at":0}
+        intent._clarification={"utterance":"old","question":"old","owner":None,"at":intent.time.monotonic() - 61}
         self.assertIsNone(intent._take_clarification())
         intent._clarification={"utterance":"old","question":"old","owner":None,"at":intent.time.monotonic()}
         desktop_input.clear_pending()
         self.assertIsNone(intent._take_clarification())
 
     def test_clarification_does_not_cross_conversation_boundary(self):
-        import tasks
+        from shelter_core import tasks
         intent._clarification={"utterance":"old","question":"old","owner":"first", "at":intent.time.monotonic()}
         token=tasks.Token();token.session_id="second"
         with tasks.scope(token):self.assertIsNone(intent._take_clarification())
 
     def test_provider_receives_the_clarification_as_a_real_turn_not_nested_metadata(self):
-        import llm
-        import context_engine
+        from shelter_core import llm
+        from shelter_core import context_engine
         def provider(messages, cfg, timeout):
             self.assertEqual([m["role"] for m in messages], ["system","user","assistant","user"])
             self.assertEqual(json.loads(messages[2]["content"])["question"], "Левой или правой?")
@@ -122,8 +122,8 @@ class SemanticInput(unittest.TestCase):
         self.assertEqual(result["decision"], "execute")
 
     def test_preflight_handles_phrases_the_general_model_missed(self):
-        import main
-        import voice
+        from shelter_core import main
+        from shelter_core import voice
         cases = [
             ("Дай табом перейти к следующему полю", {"operation":"key", "key":"tab"}),
             ("Вместо моего черновика поставь: Буду через час.", {"operation":"replace", "text":"Буду через час."}),
@@ -145,10 +145,10 @@ class SemanticInput(unittest.TestCase):
                 self.assertNotEqual(intent.classify("Отошли набранное", CONFIG)["decision"], "execute")
 
     def test_dispatcher_accepts_meaning_without_exact_parser_match(self):
-        import main
-        import pc
-        import voice
-        import desktop_input
+        from shelter_core import main
+        from shelter_core import pc
+        from shelter_core import voice
+        from shelter_core import desktop_input
         phrase = "Тыкни, пожалуйста, правой мышкой"
         self.assertIsNone(desktop_input.resolve(phrase))
         def response(question, config, commands, run_tool, devices):
@@ -165,8 +165,8 @@ class SemanticInput(unittest.TestCase):
         click.assert_called_once_with("right", 1)
 
     def test_both_model_protocols_offer_semantic_desktop_tool(self):
-        import agent_runtime
-        import llm
+        from shelter_core import agent_runtime
+        from shelter_core import llm
         specs, handlers = agent_runtime.definitions(CONFIG, [], [])
         spec = next(x for x in specs if x["function"]["name"] == "desktop")
         self.assertIn("send", spec["function"]["parameters"]["properties"]["operation"]["enum"])
@@ -174,8 +174,8 @@ class SemanticInput(unittest.TestCase):
         self.assertEqual(llm.parse_tag("desktop: click"), ("tool", ("desktop", "click")))
 
     def test_phrase_preview_preserves_text_and_never_executes_semantic_action(self):
-        import router_check
-        import pc
+        from shelter_core import router_check
+        from shelter_core import pc
         config = {**CONFIG, "commands":[], "wake":{"words":["джарвис"]}}
         with patch.object(intent, "_generate", return_value=decision({"operation":"click","button":"right","count":1})), \
              patch.object(pc, "mouse_click", side_effect=AssertionError("preview clicked")):
@@ -185,8 +185,8 @@ class SemanticInput(unittest.TestCase):
         self.assertIn("До Встречи!", direct["calls"][0]["arg"])
 
     def test_microphone_calibration_uses_the_shared_resampler(self):
-        import mic_check
-        import native_runtime
+        from shelter_core import mic_check
+        from shelter_core import native_runtime
         import numpy as np
         samples = np.zeros(320, dtype=np.float32)
         with patch.object(native_runtime, "resample_poly", return_value=samples[:160]) as resample:
@@ -195,7 +195,7 @@ class SemanticInput(unittest.TestCase):
         self.assertEqual(len(result), 160)
 
     def test_tag_stream_releases_primary_model_before_intent_pass(self):
-        import llm
+        from shelter_core import llm
         closed = []
         def stream(*args):
             try:

@@ -26,8 +26,18 @@
   MinePal. Уведомления MIT находятся в `minecraft/MINDCRAFT-LICENSE` и
   `minecraft/MINEPAL-LICENSE`.
 - На снимке панели «Персонаж» показана модель Юки на основе
-  VRM1_Constraint_Twist_Sample © 2022 pixiv Inc. Снимок использован как
-  референс для обложки README. Условия заданы в
+  VRM1_Constraint_Twist_Sample © 2022 pixiv Inc. Условия заданы в
   метаданных модели и [VRM Public License 1.0](https://vrm.dev/licenses/1.0/).
+- Портрет Пиппы — рендер общедоступной модели **Pippa** © loulou_yurika
+  (ねこのゆりか). Портрет использован для обложки README; 3D-файл доступен у автора.
+  [Модель и условия автора](https://booth.pm/ja/items/4613310).
+- Портрет Кьют — рендер **Cute Model** © Jessair. [Модель и условия автора](https://booth.pm/ja/items/7100270).
+- Портрет Цукуёми — рендер **Tsukuyomi-chan, тип A** © Rei Yumesaki. Это
+  общедоступный персонаж, реплики Shelter не относятся к официальному проекту.
+  [Модель и условия автора](https://tyc.rei-yumesaki.net/material/avatar/3d-a/).
+- 3D-облик Мандзю (`personas/manju/appearance.vrm`) — **MeowManju** © MinaraiNyanko.
+  Рендер Мандзю использован для обложки README.
+  Автор разрешает модификацию, повторное распространение и коммерческое использование,
+  кроме использования в политических целях. [Условия на странице автора](https://booth.pm/ko/items/6405885).
 
 Собственный код Shelter распространяется по [MIT](LICENSE).

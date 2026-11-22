@@ -8,8 +8,8 @@ import urllib.request
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-import context_engine
-import llm
+from shelter_core import context_engine
+from shelter_core import llm
 
 OPENER=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 CASES=[

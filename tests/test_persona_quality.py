@@ -6,11 +6,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import personas
-import voice
-import tasks
-import avatar_motion
-from avatar import AvatarController
+from shelter_core import personas
+from shelter_core import voice
+from shelter_core import tasks
+from shelter_core import avatar_motion
+from shelter_core.avatar import AvatarController
 import numpy as np
 
 
@@ -83,7 +83,7 @@ class PersonaStorage(unittest.TestCase):
 
     def test_failed_write_preserves_saved_json(self):
         personas.save({"id": "custom", "name": "Юки"})
-        with patch("personas.os.replace", side_effect=OSError("disk failure")), self.assertRaises(OSError):
+        with patch("shelter_core.personas.os.replace", side_effect=OSError("disk failure")), self.assertRaises(OSError):
             personas.save({"id": "custom", "name": "Другое имя"})
         self.assertEqual(personas.get("custom")["name"], "Юки")
 
@@ -123,10 +123,10 @@ class AvatarBehavior(unittest.TestCase):
     def test_busy_hides_without_ending_desired_visibility(self):
         avatar = AvatarController()
         cfg = self.config()
-        with patch("gaming.busy", return_value=False), patch("bus.publish") as publish:
+        with patch("shelter_core.gaming.busy", return_value=False), patch("shelter_core.bus.publish") as publish:
             avatar.configure(cfg)
             avatar.start()
-            with patch("gaming.busy", return_value=True):
+            with patch("shelter_core.gaming.busy", return_value=True):
                 avatar._last_tick = 0
                 avatar.tick(cfg)
                 self.assertEqual(publish.call_args.kwargs["state"], "hide")
@@ -137,7 +137,7 @@ class AvatarBehavior(unittest.TestCase):
     def test_motion_remains_visible_after_command_and_expires(self):
         avatar = AvatarController()
         cfg = self.config()
-        with patch("gaming.busy", return_value=False), patch("bus.publish") as publish:
+        with patch("shelter_core.gaming.busy", return_value=False), patch("shelter_core.bus.publish") as publish:
             avatar.configure(cfg)
             avatar.start()
             avatar.hold_motion(3)
@@ -150,7 +150,7 @@ class AvatarBehavior(unittest.TestCase):
             self.assertEqual(publish.call_args.kwargs["state"], "hide")
 
     def test_motion_validation_precedes_start_or_loopback(self):
-        with patch("avatar.AVATAR") as controller, patch.object(avatar_motion.BEAT, "start") as start:
+        with patch("shelter_core.avatar.AVATAR") as controller, patch.object(avatar_motion.BEAT, "start") as start:
             controller.builtin = True
             for name, bpm in (("missing", 120), ("dance", float("nan")), ("dance", 999)):
                 with self.assertRaises(ValueError): avatar_motion.perform(self.config(), name, bpm)
@@ -159,7 +159,7 @@ class AvatarBehavior(unittest.TestCase):
 
     def test_old_animation_completion_does_not_hide_new_motion(self):
         avatar = AvatarController()
-        with patch("gaming.busy", return_value=False), patch("bus.publish"):
+        with patch("shelter_core.gaming.busy", return_value=False), patch("shelter_core.bus.publish"):
             avatar.configure(self.config())
             avatar.hold_motion(30, "new-motion")
             avatar.finish_motion("old-motion")
@@ -177,7 +177,7 @@ class AvatarBehavior(unittest.TestCase):
         self.assertAlmostEqual(result["bpm"], 120, delta=1)
 
     def test_persona_prompt_does_not_teach_old_address(self):
-        import llm
+        from shelter_core import llm
         with patch.object(personas, "_active", {"id": "custom", "address": "капитан", "gender": "f"}):
             prompt = llm._system_prompt({"system": "Ты помощница капитана."}, [{"keywords": ["привет"]}])
         self.assertNotIn("сэр", prompt.lower())

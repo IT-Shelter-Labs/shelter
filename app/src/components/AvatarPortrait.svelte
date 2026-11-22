@@ -25,8 +25,8 @@
 </div>
 
 <style>
-  .portrait { height: 190px; display: grid; place-items: center; overflow: hidden; border-radius: 12px;
+  .portrait { position: relative; height: 190px; display: grid; place-items: center; overflow: hidden; border-radius: 12px;
     background: radial-gradient(ellipse at 50% 30%, #29394b, #101722 75%); margin-bottom: 6px; }
-  img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
   span { font-size: 56px; font-weight: 300; opacity: .4; color: var(--accent); }
 </style>

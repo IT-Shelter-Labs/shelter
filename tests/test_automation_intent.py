@@ -2,9 +2,9 @@ import json
 import unittest
 from unittest.mock import patch
 
-import automation_intent as auto
-import scenarios
-import tasks
+from shelter_core import automation_intent as auto
+from shelter_core import scenarios
+from shelter_core import tasks
 
 
 APPS = [{"name": "Telegram", "id": "telegram"}, {"name": "Calculator", "id": "calculator"},
@@ -13,7 +13,7 @@ APPS = [{"name": "Telegram", "id": "telegram"}, {"name": "Calculator", "id": "ca
 
 class AutomationTests(unittest.TestCase):
     def setUp(self):
-        patcher = patch("tools.load_apps", return_value=APPS)
+        patcher = patch("shelter_core.tools.load_apps", return_value=APPS)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -66,7 +66,7 @@ class AutomationTests(unittest.TestCase):
                    "открой калькулятор, затем открой терминал",
                    "открой калькулятор, затем открой C:/Temp/test.exe",
                    "открой калькулятор, затем открой несуществующую программу")
-        with patch("scenarios.execute") as execute:
+        with patch("shelter_core.scenarios.execute") as execute:
             for text in phrases:
                 with self.subTest(text=text):
                     self.assertIn("Ничего не выполнял", auto.run(auto.inspect(text), {})[0])
@@ -85,10 +85,11 @@ class AutomationTests(unittest.TestCase):
         request = auto.inspect("открой калькулятор, потом поставь громкость на тридцать")
         events = []
         with patch.object(scenarios, "_config", {}), patch.object(scenarios, "RECENT", []), \
+                patch.object(scenarios, "PLATFORM", "windows"), \
                 patch.object(auto, "launch_exact", side_effect=lambda app: events.append(("open", app)) or "принято"), \
-                patch("pc.set_volume", side_effect=lambda value: events.append(("volume", value)) or value), \
-                patch("pc.get_volume", return_value=30), patch.object(auto, "_remembered", {}), \
-                patch("scenarios.load", return_value=[]), patch("scenarios.save", side_effect=lambda item: item) as save:
+                patch("shelter_core.pc.set_volume", side_effect=lambda value: events.append(("volume", value)) or value), \
+                patch("shelter_core.pc.get_volume", return_value=30), patch.object(auto, "_remembered", {}), \
+                patch("shelter_core.scenarios.load", return_value=[]), patch("shelter_core.scenarios.save", side_effect=lambda item: item) as save:
             with tasks.scope(tasks.Token(session_id="test-a")):
                 self.assertEqual(auto.save("Мой вечер"), "В этом разговоре нет недавней успешной цепочки для сохранения.")
                 self.assertTrue(auto.run(request, {})[1])
@@ -119,13 +120,13 @@ class AutomationTests(unittest.TestCase):
             scenarios.from_run(detail)
 
     def test_real_request_does_not_fall_through_to_dialogue_on_bad_chain(self):
-        import main
-        import voice
+        from shelter_core import main
+        from shelter_core import voice
         text = "открой калькулятор и отправь сообщение"
         command = {"keywords": ["калькулятор"], "actions": []}
         self.assertIsNone(voice.find_command(text, [command]))
-        with patch("voice.speak_stream") as speak, patch("main.run_tool") as execute, patch("llm.respond") as model, \
-                patch("main.LISTENING"), patch("voice.RESUME"):
+        with patch("shelter_core.voice.speak_stream") as speak, patch("shelter_core.main.run_tool") as execute, patch("shelter_core.llm.respond") as model, \
+                patch("shelter_core.main.LISTENING"), patch("shelter_core.voice.RESUME"):
             self.assertEqual(main._answer({}, text), [])
             self.assertIn("Ничего не выполнял", speak.call_args.args[0][0])
             execute.assert_not_called()

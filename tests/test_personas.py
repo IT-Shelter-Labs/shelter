@@ -12,8 +12,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import bus  # noqa: E402
-import personas  # noqa: E402
+from shelter_core import bus  # noqa: E402
+from shelter_core import personas  # noqa: E402
 
 
 def builtin_fixture(test):
@@ -35,7 +35,7 @@ def builtin_fixture(test):
     (target/"sounds").mkdir()
     (target/"sounds/can_opened.wav").write_bytes((target/"anime/voice.wav").read_bytes())
     for context in (patch.object(personas,"BUILTIN_DIR",str(target)),patch.object(personas,"ROOT",str(target)),
-                    patch.object(personas,"ensure_model"),patch("setup_tool.install")):
+                    patch.object(personas,"ensure_model"),patch("shelter_core.setup_tool.install")):
         context.start(); test.addCleanup(context.stop)
 
 
@@ -58,7 +58,7 @@ class Personas(unittest.TestCase):
         personas._active = None
 
     def tearDown(self):
-        from avatar import AVATAR
+        from shelter_core.avatar import AVATAR
         AVATAR.config = {}
         personas.ACTIVE_PATH = self.active_path
         personas.USER_DIR = self.user_dir
@@ -104,9 +104,9 @@ class Personas(unittest.TestCase):
         self.assertEqual(personas.rewrite("Запомнил, сэр."), "Запомнил, сэр.")
 
     def test_fastpath_switch_shows_avatar(self):
-        import fastpath
-        import main
-        import voice
+        from shelter_core import fastpath
+        from shelter_core import main
+        from shelter_core import voice
         cfg = config()
         personas.apply(cfg)
         events = []
@@ -115,7 +115,7 @@ class Personas(unittest.TestCase):
         voice.prepare = lambda texts: None
         try:
             from unittest.mock import patch
-            with patch("gaming.busy", return_value=False):
+            with patch("shelter_core.gaming.busy", return_value=False):
                 reply, done = fastpath.handle("стань аниме-тянкой", cfg)
         finally:
             bus.publish, voice.prepare = old_publish, old_prepare
@@ -139,7 +139,7 @@ class WakeAtEnd(unittest.TestCase):
     W = ["джарвис", "джарвес", "жарвис"]
 
     def rest(self, text):
-        import voice
+        from shelter_core import voice
         return voice.match(text, self.W, [])[2]
 
     def test_only_a_leading_call_keeps_the_command(self):
@@ -169,8 +169,8 @@ class VoiceFollowsPersona(unittest.TestCase):
         personas._active = None
 
     def tearDown(self):
-        import voice
-        from avatar import AVATAR
+        from shelter_core import voice
+        from shelter_core.avatar import AVATAR
         AVATAR.config = {}
         voice.CLONE_REF = {}
         personas.ACTIVE_PATH = self.active_path
@@ -179,8 +179,8 @@ class VoiceFollowsPersona(unittest.TestCase):
         personas._active = None
 
     def test_jarvis_reference_is_sent_explicitly(self):
-        import main
-        import voice
+        from shelter_core import main
+        from shelter_core import voice
         cfg = config()
         cfg["tts"]["engine"] = "clone"
         old_engine = voice.ENGINE
@@ -198,7 +198,7 @@ class VoiceFollowsPersona(unittest.TestCase):
             voice.ENGINE = old_engine
 
     def test_switch_stops_preparing_old_voice(self):
-        import voice
+        from shelter_core import voice
         spoken = []
         old = voice.synthesize
         voice.synthesize = lambda text: (spoken.append(text), voice.set_voice({}, lambda: None))
@@ -212,7 +212,7 @@ class VoiceFollowsPersona(unittest.TestCase):
 class AckEcho(unittest.TestCase):
     def test_ack_echo_removed_only_right_after_ack(self):
         import time
-        import voice
+        from shelter_core import voice
         cfg = {"wake": {"actions": [{"type": "say", "text": "Да, сэр."}]}}
         voice.ACK_AT = time.monotonic()
         self.assertEqual(voice.strip_ack("да сэр открой браузер", cfg), "открой браузер")

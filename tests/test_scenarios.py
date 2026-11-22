@@ -15,10 +15,10 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import main  # noqa: E402
-import scenarios  # noqa: E402
-import tasks  # noqa: E402
-import triggers  # noqa: E402
+from shelter_core import main  # noqa: E402
+from shelter_core import scenarios  # noqa: E402
+from shelter_core import tasks  # noqa: E402
+from shelter_core import triggers  # noqa: E402
 
 LEGACY = [
     {"keywords": ["пока", "закрой", "до свидания"], "whole": True, "description": "попрощаться",
@@ -65,7 +65,7 @@ class Migration(Sandbox):
         self.assertEqual(backup[0]["count"], 3)
 
     def test_voice_matcher_still_sees_commands(self):
-        import voice
+        from shelter_core import voice
         commands = self.config["commands"]
         self.assertTrue(all(c.get("scenario") for c in commands))
         self.assertEqual(voice.find_command("пока", commands)["scenario"], scenarios.load()[0]["id"])
@@ -112,7 +112,7 @@ class Executor(Sandbox):
 
     def test_branch_by_condition(self):
         said = []
-        with patch("actions.run_action", side_effect=lambda a: said.append(a.get("text"))):
+        with patch("shelter_core.actions.run_action", side_effect=lambda a: said.append(a.get("text"))):
             result = self.run_item([{"type": "if", "condition": {"type": "time_between", "from": "00:00", "to": "23:59"},
                                      "then": [{"type": "say", "text": "да"}], "else": [{"type": "say", "text": "нет"}]}])
         self.assertEqual(result["status"], "done")
@@ -120,7 +120,7 @@ class Executor(Sandbox):
 
     def test_bounded_repeat(self):
         said = []
-        with patch("actions.run_action", side_effect=lambda a: said.append(a.get("text"))):
+        with patch("shelter_core.actions.run_action", side_effect=lambda a: said.append(a.get("text"))):
             result = self.run_item([{"type": "repeat", "times": 3, "steps": [{"type": "say", "text": "раз"}]}])
         self.assertEqual(said, ["раз"] * 3)
         self.assertEqual(result["status"], "done")
@@ -132,7 +132,7 @@ class Executor(Sandbox):
         self.assertEqual([s["status"] for s in result["steps"]], ["failed"])
 
     def test_continue_on_error_marks_partial(self):
-        with patch("actions.run_action"):
+        with patch("shelter_core.actions.run_action"):
             result = self.run_item([{"type": "launch", "path": "C:/no/such.exe"}, {"type": "say", "text": "дальше"}],
                                    on_error="continue")
         self.assertEqual(result["status"], "partial")
@@ -152,7 +152,7 @@ class Executor(Sandbox):
         def worker():
             with tasks.scope(tasks.Token()):
                 box["result"] = scenarios.execute(item, run_id="run_test")
-        with patch("actions.run_action", side_effect=lambda a: said.append(a)):
+        with patch("shelter_core.actions.run_action", side_effect=lambda a: said.append(a)):
             thread = threading.Thread(target=worker)
             thread.start()
             time.sleep(0.3)
@@ -181,7 +181,7 @@ class Executor(Sandbox):
         item = scenarios.save({"name": "Петля", "phrases": ["петля"], "steps": [{"type": "say", "text": "x"}]})
         item["steps"] = [{"type": "scenario", "id": item["id"]}]
         scenarios.save(item)
-        with patch("actions.run_action"):
+        with patch("shelter_core.actions.run_action"):
             with tasks.scope(tasks.Token()):
                 result = scenarios.execute(scenarios.get(item["id"]))
         self.assertEqual(result["status"], "failed")
@@ -193,7 +193,7 @@ class Executor(Sandbox):
         self.assertEqual(result["status"], "skipped")
 
     def test_plan_does_not_execute(self):
-        with patch("actions.run_action", side_effect=AssertionError("план ничего не выполняет")):
+        with patch("shelter_core.actions.run_action", side_effect=AssertionError("план ничего не выполняет")):
             plan = scenarios.plan({"name": "П", "phrases": ["п"], "steps": [
                 {"type": "say", "text": "привет"}, {"type": "launch", "path": "C:/no/x.exe"},
                 {"type": "shell", "cmd": "echo"}]})
@@ -307,7 +307,7 @@ class Triggers(Sandbox):
 
 class PhraseCheck(Sandbox):
     def explain(self, phrase, draft=None):
-        import router_check
+        from shelter_core import router_check
         return router_check.explain(phrase, self.config, draft)
 
     def test_close_telegram_does_not_close_jarvis(self):
@@ -327,7 +327,7 @@ class PhraseCheck(Sandbox):
         self.assertEqual(self.explain("джарвис")["route"], "wake")
 
     def test_persona_switch_not_executed(self):
-        with patch("main.switch_persona", side_effect=AssertionError("проверка не переключает")):
+        with patch("shelter_core.main.switch_persona", side_effect=AssertionError("проверка не переключает")):
             result = self.explain("стань джарвисом")
         self.assertIn(result["route"], ("persona", "builtin"))
 
@@ -340,7 +340,7 @@ class PhraseCheck(Sandbox):
         self.assertEqual(self.explain("пока")["scenario"], scenarios.load()[0]["id"], "сохранённые не изменились")
 
     def test_conflicts(self):
-        import router_check
+        from shelter_core import router_check
         draft = scenarios.normalize({"name": "X", "phrases": ["пока", "стоп", "джарвис включи"], "steps": [{"type": "say", "text": "x"}]})
         texts = " ".join(c["text"] for c in router_check.conflicts(self.config, draft))
         self.assertIn("уже есть", texts)

@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-import minecraft_npc
-from minecraft_companion import Companion, chat_lines, describe_job, describe_position, lan_port, validate
-from minecraft_intents import desktop, model_command, parse, scoped
+from shelter_core import minecraft_npc
+from shelter_core.minecraft_companion import Companion, chat_lines, describe_job, describe_position, lan_port, validate
+from shelter_core.minecraft_intents import desktop, model_command, parse, scoped
 
 
 class MinecraftCompanionTests(unittest.TestCase):
@@ -125,7 +125,7 @@ class MinecraftCompanionTests(unittest.TestCase):
         self.assertEqual(list(chat_lines("\u200b/op OtherPlayer")), ["› /op OtherPlayer"])
 
     def test_natural_language_can_resolve_inflected_items_from_the_client_dictionary(self):
-        with patch("minecraft_intents.localized_items", return_value=({}, {"железный кирка": "iron_pickaxe",
+        with patch("shelter_core.minecraft_intents.localized_items", return_value=({}, {"железный кирка": "iron_pickaxe",
                                                                          "еловый ступенька": "spruce_stairs"})):
             self.assertEqual(parse("экипируй железную кирку"), {"op": "equip", "item": "iron_pickaxe", "count": 1})
             self.assertEqual(parse("дай пять еловых ступенек"), {"op": "give", "item": "spruce_stairs", "count": 5})

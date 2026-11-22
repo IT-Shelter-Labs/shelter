@@ -6,7 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import voice  # noqa: E402
+from shelter_core import voice  # noqa: E402
 
 COMMANDS = [
     {"keywords": ["пока", "закрой", "скрой"], "whole": True, "description": "bye", "actions": [{"type": "close"}]},

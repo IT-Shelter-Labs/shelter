@@ -6,8 +6,8 @@ import unittest
 from unittest.mock import patch
 
 import numpy as np
-import remote_audio as audio
-import tasks
+from shelter_core import remote_audio as audio
+from shelter_core import tasks
 
 
 class RemoteAudio(unittest.TestCase):
@@ -46,7 +46,7 @@ class RemoteAudio(unittest.TestCase):
         self.assertTrue(audio.read("owner", "request", wait=0)["done"])
 
     def test_stop_cancels_queued_queries_and_finishes_their_audio(self):
-        from actions import ActionRunner
+        from shelter_core.actions import ActionRunner
         runner = ActionRunner()
         started = threading.Event()
         ran = []

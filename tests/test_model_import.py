@@ -7,8 +7,8 @@ import unittest
 import zipfile
 from unittest.mock import patch
 
-import import_avatars
-import personas
+from shelter_core import import_avatars
+from shelter_core import personas
 
 
 def model(external=False):

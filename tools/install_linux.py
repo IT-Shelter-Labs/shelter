@@ -57,7 +57,7 @@ def main():
         run(sys.executable, "-m", "venv", ".venv")
         python = target / ".venv/bin/python"
         run(python, "-m", "pip", "install", "--no-cache-dir", "-r", "requirements.txt")
-        components = ["vosk", "kws", "vad", "piper:ruslan"]
+        components = ["vosk", "kws", "vad", "piper:ruslan", "piper:irina"]
         if args.light_recognition:
             import json
 

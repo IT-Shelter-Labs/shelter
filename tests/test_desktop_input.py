@@ -2,12 +2,12 @@ import ctypes
 import json
 import unittest
 from unittest.mock import Mock,patch
-import desktop_input as desktop
-import desktop_access as access
-import fastpath
-import pc
-import tasks
-import voice
+from shelter_core import desktop_input as desktop
+from shelter_core import desktop_access as access
+from shelter_core import fastpath
+from shelter_core import pc
+from shelter_core import tasks
+from shelter_core import voice
 
 CONFIG={"llm":{"enabled":True,"tools":["pc"]},"commands":[]}
 
@@ -46,7 +46,7 @@ class Parsing(unittest.TestCase):
             self.assertIsNotNone(fastpath.handle("кликни правой кнопкой мыши",CONFIG,dry=True))
 
     def test_main_uses_only_the_prevalidated_mouse_chain(self):
-        import main
+        from shelter_core import main
         with patch.object(pc,"mouse_click",return_value=True) as click,patch.object(main,"run_action"),patch.object(main.gaming,"busy",return_value=False),patch.object(voice,"speak_stream") as speak:
             main.answer(CONFIG,"кликни левой кнопкой мыши и кликни правой кнопкой мыши")
         self.assertEqual(click.call_args_list,[unittest.mock.call("left",1),unittest.mock.call("right",1)])
@@ -105,7 +105,7 @@ class DraftWorkflow(unittest.TestCase):
             self.assertIsNone(desktop.resolve("погода завтра"))
 
     def test_closing_the_listening_session_clears_pending_dictation(self):
-        import actions
+        from shelter_core import actions
         self.run_command("напиши сообщение")
         with patch.object(actions,"_overlay_proc",None),patch.object(actions,"overlay_alive",return_value=False),patch.object(actions,"AVATAR"):
             actions.close_overlay()
@@ -133,7 +133,8 @@ class DraftWorkflow(unittest.TestCase):
         self.assertEqual(self.value,"Привет");self.keys.assert_not_called()
 
     def test_cancelled_rewrite_does_not_hold_the_desktop_until_model_timeout(self):
-        import threading,time,textops
+        import threading, time
+        from shelter_core import textops
         self.run_command("напиши сообщение Привет")
         token=tasks.Token();entered=threading.Event();release=threading.Event();done=threading.Event()
         def generate(*args):entered.set();release.wait(2);return "Новый текст"
@@ -184,8 +185,8 @@ class DraftWorkflow(unittest.TestCase):
         self.keys.assert_called_once_with("ctrl+enter")
 
     def test_dictated_yes_cannot_approve_a_previous_action(self):
-        import main
-        from policy import CONFIRMATIONS
+        from shelter_core import main
+        from shelter_core.policy import CONFIRMATIONS
         self.addCleanup(CONFIRMATIONS.clear)
         self.run_command("напиши сообщение")
         CONFIRMATIONS.request({"actions":[{"type":"shell","command":"unused"}]})
@@ -195,8 +196,8 @@ class DraftWorkflow(unittest.TestCase):
         self.assertFalse(CONFIRMATIONS.active())
 
     def test_model_cannot_invent_a_send_or_type_action(self):
-        import main
-        import desktop_intent
+        from shelter_core import main
+        from shelter_core import desktop_intent
         got=[]
         def response(question,config,commands,run_tool,devices):
             got.append(run_tool("desktop",json.dumps({"operation":"send"}))[0])
@@ -209,8 +210,8 @@ class DraftWorkflow(unittest.TestCase):
         self.writer.assert_not_called();self.keys.assert_not_called()
 
     def test_semantic_dictation_does_not_trigger_greeting_keyword(self):
-        import main
-        import desktop_intent
+        from shelter_core import main
+        from shelter_core import desktop_intent
         cfg={**CONFIG,"commands":[{"keywords":["привет"],"actions":[{"type":"say","text":"Hello"}]}]}
         answer=json.dumps({"decision":"execute","confidence":0.99,"command":{"operation":"write","text":"Привет"},"question":""})
         with patch.object(desktop_intent,"_generate",return_value=answer),patch.object(main,"run_action"), \

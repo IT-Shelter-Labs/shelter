@@ -18,7 +18,7 @@ def extract():
         value=re.sub(r'\s+',' ',text).strip()
         if len(value)>2 and re.search('[а-яёА-ЯЁ]',value):found.setdefault(value,file)
     for name in FILES:
-        path=ROOT/name
+        path=ROOT/'shelter_core'/name
         if not path.is_file():continue
         tree=ast.parse(path.read_text(encoding='utf8'))
         parents={child:node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}

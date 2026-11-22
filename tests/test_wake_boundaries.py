@@ -8,9 +8,9 @@ from unittest.mock import patch
 
 import numpy as np
 
-import asr
-import personas
-import voice
+from shelter_core import asr
+from shelter_core import personas
+from shelter_core import voice
 
 
 class WakeBoundary(unittest.TestCase):
@@ -88,7 +88,7 @@ class PersonaIntent(unittest.TestCase):
             self.assertTrue(personas.switch_requested(text), text)
 
     def test_model_cannot_switch_on_misheard_call(self):
-        import main
+        from shelter_core import main
         seen = []
         def respond(question, config, commands, run_tool, **kwargs):
             seen.append(run_tool("persona", "jarvis")[0])

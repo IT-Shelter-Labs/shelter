@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import demo_recorder  # noqa: E402
-import scenarios  # noqa: E402
+from shelter_core import demo_recorder  # noqa: E402
+from shelter_core import scenarios  # noqa: E402
 
 
 class Demo(unittest.TestCase):

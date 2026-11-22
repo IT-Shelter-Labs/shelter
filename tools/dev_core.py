@@ -26,18 +26,18 @@ SANDBOX = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROO
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8771
 os.makedirs(SANDBOX, exist_ok=True)
 
-import netfix  # noqa: F401,E402
-import bus  # noqa: E402
-import main  # noqa: E402
-import actions  # noqa: E402
-import scenarios  # noqa: E402
-import triggers  # noqa: E402
-import tasks  # noqa: E402
-import secrets_store  # noqa: E402
-import assistant_store  # noqa: E402
-import personas  # noqa: E402
-import control as control_module  # noqa: E402
-from control import ControlServer  # noqa: E402
+from shelter_core import netfix  # noqa: F401,E402
+from shelter_core import bus  # noqa: E402
+from shelter_core import main  # noqa: E402
+from shelter_core import actions  # noqa: E402
+from shelter_core import scenarios  # noqa: E402
+from shelter_core import triggers  # noqa: E402
+from shelter_core import tasks  # noqa: E402
+from shelter_core import secrets_store  # noqa: E402
+from shelter_core import assistant_store  # noqa: E402
+from shelter_core import personas  # noqa: E402
+from shelter_core import control as control_module  # noqa: E402
+from shelter_core.control import ControlServer  # noqa: E402
 
 settings_copy = os.path.join(SANDBOX, "settings.json")
 if not os.path.exists(settings_copy) and os.path.exists(main.SETTINGS_PATH):
@@ -50,14 +50,15 @@ personas.ACTIVE_PATH = os.path.join(SANDBOX, 'persona.json')
 scenarios.STORE = os.path.join(SANDBOX, "scenarios.json")
 scenarios.BACKUPS = os.path.join(SANDBOX, "backups")
 triggers.STATE = os.path.join(SANDBOX, "triggers.json")
-import companion_devices  # noqa: E402
-import plugins_manager  # noqa: E402
+from shelter_core import companion_devices  # noqa: E402
+from shelter_core import plugins_manager  # noqa: E402
 companion_devices.STORE = os.path.join(SANDBOX, "companion_devices.json")
 plugins_manager.DIR = os.path.join(SANDBOX, "plugins")
 plugins_manager.STATE = os.path.join(SANDBOX, "plugins", "state.json")
 
 config = main.load_config()
 config.setdefault("control", {})["port"] = PORT
+personas.apply(config)
 
 
 def fake_persona(current_config, persona_id):

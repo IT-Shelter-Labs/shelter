@@ -24,10 +24,12 @@
   "voice": {
     "silero": "xenia",
     "piper": "irina",
-    "about": "Голос создан нейросетью Qwen3-TTS VoiceDesign по описанию — это не голос реального человека.",
     "pitch": 1.12
   },
   "avatar": {
-    "type": "hud"
+    "type": "vrm",
+    "model": "models/avatars/anime.vrm",
+    "credit": "Модель: VRM1_Constraint_Twist_Sample (c) 2022 pixiv Inc., лицензия VRM 1.0 — распространение разрешено.",
+    "preview": "preview.png"
   }
 }

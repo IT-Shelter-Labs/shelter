@@ -4,8 +4,8 @@ import types
 import unittest
 from unittest.mock import Mock, patch
 import numpy as np
-import voice
-import tasks
+from shelter_core import voice
+from shelter_core import tasks
 
 
 class SpeechOutput(unittest.TestCase):
@@ -17,7 +17,7 @@ class SpeechOutput(unittest.TestCase):
         stack.enter_context(patch.object(voice, "synthesize_chunks", side_effect=chunks))
         stack.enter_context(patch.object(voice, "_avatar", return_value=None))
         stack.enter_context(patch.object(voice, "cancel_preparation"))
-        stack.enter_context(patch("bus.publish"))
+        stack.enter_context(patch("shelter_core.bus.publish"))
         self.addCleanup(stack.close)
         return stack
 
@@ -71,12 +71,12 @@ class SpeechOutput(unittest.TestCase):
         self.assertFalse(voice._sessions)
 
     def test_missing_recorded_file_uses_current_voice(self):
-        with patch.object(voice, "ENGINE", "files"), patch("personas.active", return_value={"id":"jarvis"}), patch.object(voice, "speak_stream") as speak:
+        with patch.object(voice, "ENGINE", "files"), patch("shelter_core.personas.active", return_value={"id":"jarvis"}), patch.object(voice, "speak_stream") as speak:
             voice.say("Здравствуйте", file="sounds/does-not-exist.wav")
         speak.assert_called_once_with(["Здравствуйте"])
 
     def test_capabilities_are_local_and_obey_enabled_tools(self):
-        import fastpath
+        from shelter_core import fastpath
         tool = Mock(side_effect=AssertionError("help must not execute actions"))
         for phrase in ("что ты умеешь", "что ты можешь", "какие у тебя возможности", "умеешь"):
             reply, executed = fastpath.handle(phrase, {"llm":{"enabled":False,"tools":["pc"]}, "persona":{"address":"хозяин"}}, run_tool=tool)

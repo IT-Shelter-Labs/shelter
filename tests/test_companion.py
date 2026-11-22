@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 import numpy as np
-import lip_sync
-import personas
+from shelter_core import lip_sync
+from shelter_core import personas
 
 
 class LipSync(unittest.TestCase):
@@ -66,8 +66,8 @@ class AccessoryValidation(unittest.TestCase):
 
 class SeatedLifecycle(unittest.TestCase):
     def test_seated_visibility_survives_temporary_gesture_and_dialogue_end(self):
-        from avatar import AvatarController
-        import bus
+        from shelter_core.avatar import AvatarController
+        from shelter_core import bus
         avatar=AvatarController()
         avatar.config={'mode':'avatar','persona':{'always':False,'options':{}}}
         with patch.object(bus,'publish') as publish:
@@ -77,7 +77,7 @@ class SeatedLifecycle(unittest.TestCase):
             self.assertTrue(avatar._visible)
             self.assertTrue(avatar.motion_active)
             avatar._motion_id='wave'; avatar._motion_until=0
-            with patch('gaming.busy',return_value=False): avatar.tick({})
+            with patch('shelter_core.gaming.busy',return_value=False): avatar.tick({})
             self.assertTrue(any(call.kwargs.get('preserve_seat') is True for call in publish.call_args_list))
             avatar.set_seated(False); avatar.hold_motion(0)
             self.assertFalse(avatar.motion_active)

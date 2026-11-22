@@ -9,7 +9,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import wakeword  # noqa: E402
+from shelter_core import wakeword  # noqa: E402
 
 
 class Threshold(unittest.TestCase):

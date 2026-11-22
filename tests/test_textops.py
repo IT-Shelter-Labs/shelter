@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import fastpath  # noqa: E402
-import textops  # noqa: E402
+from shelter_core import fastpath  # noqa: E402
+from shelter_core import textops  # noqa: E402
 
 
 class TextOps(unittest.TestCase):
@@ -17,7 +17,7 @@ class TextOps(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "захват выделения — Windows")
     def test_failed_capture_does_not_fall_back_to_clipboard(self):
-        import pc
+        from shelter_core import pc
         with patch.object(textops, "_foreground", return_value={"hwnd": 5, "title": "Блокнот", "process": "notepad"}), \
              patch.object(pc, "clipboard_text", return_value="старый буфер с паролем"), \
              patch.object(pc, "send_keys"), patch.object(textops, "_sequence", return_value=7):
@@ -42,7 +42,7 @@ class TextOps(unittest.TestCase):
 
     @unittest.skipUnless(os.name == "nt", "вставка — Windows")
     def test_apply_refuses_other_window(self):
-        import pc
+        from shelter_core import pc
         textops.STATE.update(source="selection", window={"hwnd": 111, "title": "Word"}, text="a", result="b", status="ready")
         with patch.object(pc.user32, "IsWindow", return_value=True), patch.object(pc, "_focus"), \
              patch.object(pc.user32, "GetForegroundWindow", return_value=222), \

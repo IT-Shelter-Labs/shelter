@@ -11,8 +11,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import persona_package as package  # noqa: E402
-import personas  # noqa: E402
+from shelter_core import persona_package as package  # noqa: E402
+from shelter_core import personas  # noqa: E402
 
 
 class PersonaPackage(unittest.TestCase):

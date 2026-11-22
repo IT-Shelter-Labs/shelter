@@ -5,6 +5,7 @@
   import { onMount, onDestroy, tick } from "svelte";
   import { open as openFile, save as saveFile } from "../lib/fileDialogs";
   import { invoke } from "@tauri-apps/api/core";
+  import { openUrl } from "@tauri-apps/plugin-opener";
   import { Check, Pencil, Copy, Trash2, Mic, FileAudio, Box, Sparkles, Download, Upload, CircleAlert } from "@lucide/svelte";
   import { ask as askDialog } from "../lib/dialog.svelte";
   import Setting from "../components/Setting.svelte";
@@ -263,8 +264,8 @@
   <div class="grid">
     {#each list as p (p.id)}
       <div class="card persona {p.id === active ? 'on' : ''}">
-        {#if p.avatar?.type === "vrm"}<AvatarPortrait path={p.avatar.preview} name={p.name} />
-        {:else}<div class="reactor-portrait" role="img" aria-label={uiText("Реактор " + String(p.name))}><Reactor size={150} animated={false} /></div>{/if}
+        {#if p.id === "jarvis"}<div class="reactor-portrait" role="img" aria-label={uiText("Реактор " + String(p.name))}><Reactor size={150} animated={false} /></div>
+        {:else}<AvatarPortrait path={p.avatar?.preview} name={p.builtin ? uiText(p.name) : p.name} />{/if}
         <div class="head">
           <span class="badge">{uiText(p.avatar?.type === "vrm" ? "3D" : "HUD")}</span>
           <h3>{p.builtin ? uiText(p.name) : p.name}</h3>
@@ -283,6 +284,12 @@
           <button class="btn" disabled={busy !== ""} title={uiText("Экспорт в пакет")} aria-label={uiText("Экспорт «" + String(p.name) + "» в пакет")} onclick={() => exportPersona(p)}><Download size={14} /></button>
           {#if !p.builtin}<button class="btn" disabled={busy !== ""} title={uiText("Удалить")} aria-label={uiText("Удалить «" + String(p.name) + "»")} onclick={() => remove(p)}><Trash2 size={14} /></button>{/if}
         </div>
+        {#if p.builtin && p.avatar?.source?.startsWith("https://")}
+          {@const source = p.avatar.source}
+          <button type="button" class="btn source" title={p.avatar.credit} onclick={() => openUrl(source).catch(toastError)}>
+            {uiText("Страница 3D-модели")}
+          </button>
+        {/if}
         {#if p.voice?.status}<p class="voice-status"><CircleAlert size={13} /> {uiText(p.voice.status)}</p>{/if}
       </div>
     {/each}
@@ -430,6 +437,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px; }
   .persona { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
   .persona.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .source { align-self: flex-start; }
   .persona.add { align-items: center; justify-content: center; min-height: 140px; cursor: pointer; color: var(--text-2);
                  border-style: dashed; font: inherit; background: transparent; }
   .persona.add:hover { color: var(--text); background: var(--hover); }

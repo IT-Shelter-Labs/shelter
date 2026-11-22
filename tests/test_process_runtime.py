@@ -2,7 +2,7 @@ import subprocess
 import unittest
 from unittest.mock import patch
 
-import process_runtime
+from shelter_core import process_runtime
 
 
 class BackgroundService(unittest.TestCase):

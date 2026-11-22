@@ -11,16 +11,16 @@ from unittest.mock import patch
 import numpy as np
 from scipy.io import wavfile
 
-import cloud_media
-import game_assist
-import live_facts
-import llm_connections
-import main
-import minecraft_intents
-import personas
-import screen
-import voice
-from audio import LISTENING
+from shelter_core import cloud_media
+from shelter_core import game_assist
+from shelter_core import live_facts
+from shelter_core import llm_connections
+from shelter_core import main
+from shelter_core import minecraft_intents
+from shelter_core import personas
+from shelter_core import screen
+from shelter_core import voice
+from shelter_core.audio import LISTENING
 
 
 class BuiltinModelTests(unittest.TestCase):
@@ -40,7 +40,7 @@ class BuiltinModelTests(unittest.TestCase):
 class FactsTests(unittest.TestCase):
     def test_weather_resolves_the_inflected_city_before_geocoding(self):
         from urllib.parse import parse_qs, urlsplit
-        import tools
+        from shelter_core import tools
         geocoding = {"results": [{"name": "Амстердам", "latitude": 52.37, "longitude": 4.89}]}
         forecast = {"current": {"temperature_2m": 10, "apparent_temperature": 10, "weather_code": 0,
                                 "wind_speed_10m": 2}, "daily": {}}
@@ -158,8 +158,8 @@ class InteractionTests(unittest.TestCase):
         voice.RESUME.set()
         LISTENING.set()
         try:
-            with patch("minecraft_companion.MINECRAFT.interrupt"), patch.object(voice, "stop_speaking"), \
-                    patch("scenarios.cancel"), patch.object(main, "close_overlay") as close:
+            with patch("shelter_core.minecraft_companion.MINECRAFT.interrupt"), patch.object(voice, "stop_speaking"), \
+                    patch("shelter_core.scenarios.cancel"), patch.object(main, "close_overlay") as close:
                 main.interrupt({}, runner, dismiss_dialogue=True)
             self.assertFalse(any(flag.is_set() for flag in (voice.ARM, voice.RESUME, LISTENING)))
             self.assertTrue(voice.STOP_LISTENING.is_set())

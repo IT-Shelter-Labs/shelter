@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import plugins_manager as pm  # noqa: E402
+from shelter_core import plugins_manager as pm  # noqa: E402
 
 
 def package(folder, manifest, code):
@@ -121,7 +121,7 @@ class Plugins(unittest.TestCase):
         self.assertEqual(len(pm.call("demo-plugin", timeout=5)), 262144)
 
     def test_typed_extensions_and_missing_handlers(self):
-        import plugin_extensions as ext
+        from shelter_core import plugin_extensions as ext
         import numpy as np
         config = {"security": {"allow_plugins": True}}
         code = """import base64

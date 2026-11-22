@@ -55,7 +55,7 @@ export type Persona = {
   switch_reply?: string;
   builtin?: boolean;
   voice?: { reference?: string; reference_text?: string; silero?: string; piper?: string; pitch?: number; about?: string; effect?: "" | "robot"; status?: string };
-  avatar?: { type?: "hud" | "vrm"; model?: string; preview?: string; credit?: string; scale?: number; motion?: number;
+  avatar?: { type?: "hud" | "vrm"; model?: string; preview?: string; credit?: string; source?: string; scale?: number; motion?: number;
              accessories?: import('../avatar/accessories').Accessory[]; lips?: 'auto'|'audio'|'off'; lip_delay?: number; reactions?: boolean; gaze?: boolean;
              framing?: "portrait" | "full"; desktop_framing?: "full" | "waist" | "portrait";
              walk?: "natural" | "formal"; fps?: number; bpm?: number; subtitles?: boolean; idle_motion?: boolean };

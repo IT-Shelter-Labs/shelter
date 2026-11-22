@@ -5,17 +5,17 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import agent_runtime
-import avatar_motion
-import bus
-import llm
-import main
-import persona_groups
-import personas
-import tasks
-import voice
-import fastpath
-from audio import LISTENING
+from shelter_core import agent_runtime
+from shelter_core import avatar_motion
+from shelter_core import bus
+from shelter_core import llm
+from shelter_core import main
+from shelter_core import persona_groups
+from shelter_core import personas
+from shelter_core import tasks
+from shelter_core import voice
+from shelter_core import fastpath
+from shelter_core.audio import LISTENING
 
 
 class DesktopCommands(unittest.TestCase):
@@ -32,7 +32,7 @@ class DesktopCommands(unittest.TestCase):
         self.assertIsNone(avatar_motion.movement("не переходи на второй монитор"))
 
     def test_long_walk_remains_visible_until_arrival_and_does_not_open_a_dialogue(self):
-        with patch("avatar.AVATAR") as controller, patch.object(bus, "publish") as publish, patch.object(avatar_motion.BEAT, "stop"):
+        with patch("shelter_core.avatar.AVATAR") as controller, patch.object(bus, "publish") as publish, patch.object(avatar_motion.BEAT, "stop"):
             controller.builtin = True
             avatar_motion.move({}, 2, "center")
             controller.start.assert_called_once_with(dialogue=False)
@@ -57,7 +57,7 @@ class DesktopCommands(unittest.TestCase):
         animation = next(s for s in specs if s["function"]["name"] == "avatar")
         self.assertIn("heart", animation["function"]["parameters"]["properties"]["action"]["enum"])
         self.assertEqual(handlers["avatar_move"][0], "avatar")
-        with patch("avatar.AVATAR") as controller, self.assertRaises(ValueError):
+        with patch("shelter_core.avatar.AVATAR") as controller, self.assertRaises(ValueError):
             controller.builtin = True
             avatar_motion.execute(config, "nonexistent_motion")
 
@@ -75,7 +75,7 @@ class DesktopCommands(unittest.TestCase):
         def switch():
             tasks.continue_dialogue()
             return "Снова к вашим услугам, сэр.", True
-        with patch("fastpath.handle", side_effect=lambda *a, **k: switch()), patch("fastpath.plan", return_value=None), \
+        with patch("shelter_core.fastpath.handle", side_effect=lambda *a, **k: switch()), patch("shelter_core.fastpath.plan", return_value=None), \
              patch.object(main, "run_action") as action, patch.object(main.gaming, "busy", return_value=False), \
              patch.object(voice, "speak_stream"), patch.object(bus, "publish"), tasks.scope(tasks.Token()):
             tasks.run(lambda: main.answer(cfg, "стань Джарвисом"))

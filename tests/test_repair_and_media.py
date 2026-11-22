@@ -6,13 +6,13 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-import browser_episode
-import media
-import neural
-import setup_tool
-import startup_assets
-import tts_server
-import voice_assets
+from shelter_core import browser_episode
+from shelter_core import media
+from shelter_core import neural
+from shelter_core import setup_tool
+from shelter_core import startup_assets
+from shelter_core import tts_server
+from shelter_core import voice_assets
 
 
 class RecoveryTests(unittest.TestCase):

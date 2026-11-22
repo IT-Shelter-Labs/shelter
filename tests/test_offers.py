@@ -6,9 +6,9 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import llm  # noqa: E402
-import main  # noqa: E402
-from policy import CONFIRMATIONS  # noqa: E402
+from shelter_core import llm  # noqa: E402
+from shelter_core import main  # noqa: E402
+from shelter_core.policy import CONFIRMATIONS  # noqa: E402
 
 CONFIG = {"llm": {"tools": ["app", "search", "weather"], "commands": True},
           "commands": [{"keywords": ["музык*"], "description": "включить плейлист", "actions": [{"type": "say", "text": "x"}]}],

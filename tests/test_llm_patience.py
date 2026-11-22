@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import main  # noqa: E402
+from shelter_core import main  # noqa: E402
 
 
 def slow(delay, items):
@@ -36,6 +36,6 @@ class Patience(unittest.TestCase):
         self.assertIn("видеокарта", got[-1][1])
 
     def test_stop_is_not_a_goodbye(self):
-        import voice
+        from shelter_core import voice
         config = main.load_config()
         self.assertIsNone(voice.find_command("стоп", config["commands"]))

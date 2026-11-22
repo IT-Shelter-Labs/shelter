@@ -33,10 +33,11 @@
     python: "Среда Python",
     packages: "Библиотеки распознавания и звука",
     vosk: "Распознавание речи vosk",
-    kws: "Модель слова «Джарвис»",
+    kws: "Распознавание имени персонажа",
     gigaam: "Точный слух GigaAM",
     vad: "Фильтр шума Silero",
     "piper:ruslan": "Лёгкий голос",
+    "piper:irina": "Голос для Пиппы",
     ollama: "Движок нейросети Ollama",
   };
 
@@ -55,6 +56,7 @@
     if (!check.packages?.ok) need.push("packages");
     for (const id of ["vosk", "kws", "vad", ...(preciseRecognition ? ["gigaam"] : [])]) if (!check[id]?.ok) need.push(id);
     if (!check.piper?.ok) need.push("piper:ruslan");
+    if (!(check.piper?.voices ?? []).includes("irina")) need.push("piper:irina");
     const model = modelMode === "local" ? hw?.recommendation.model : null;
     if (model) {
       if (!check.ollama?.ok) need.push("ollama");
@@ -273,7 +275,7 @@
             <div class="caps">{uiText("Или лёгкий голос")}</div>
           {/if}
           <div class="voices">
-            {#each [["ruslan", "Руслан"], ["dmitri", "Дмитрий"], ["denis", "Денис"]] as [id, name]}
+            {#each [["ruslan", "Руслан"], ["irina", "Ирина"], ["dmitri", "Дмитрий"], ["denis", "Денис"]] as [id, name]}
               {#if (check.piper?.voices ?? ["ruslan"]).includes(id)}
                 <button class="card voice" class:sel={get("tts.engine") !== "clone" && get("tts.piper.voice", "ruslan") === id} onclick={() => chooseVoice("piper", id)}><b>{uiText(name)}</b><span class="dim">{uiText("лёгкий голос, процессор")}</span></button>
               {/if}

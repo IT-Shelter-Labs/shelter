@@ -7,8 +7,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import speech_text  # noqa: E402
-import voice  # noqa: E402
+from shelter_core import speech_text  # noqa: E402
+from shelter_core import voice  # noqa: E402
 
 say = speech_text.prepare_for_speech
 
@@ -74,7 +74,7 @@ class CloneVoice(unittest.TestCase):
         self.assertNotEqual(voice._cache_path("Да, сэр."), first, "другой образец — другой голос")
 
     def test_dead_clone_is_not_awaited(self):
-        import neural
+        from shelter_core import neural
         old = neural._process
         neural._process = None
         try:

@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 class NativeContract(unittest.TestCase):
     def test_all_control_post_routes_except_launcher_stop_are_reachable(self):
-        tree = ast.parse((ROOT / "control.py").read_text(encoding="utf-8"))
+        tree = ast.parse((ROOT / "shelter_core/control.py").read_text(encoding="utf-8"))
         method = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "do_POST")
         routes = set()
         for node in ast.walk(method):

@@ -8,8 +8,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from functools import partial
 from unittest.mock import patch
 
-import plugin_catalog as catalog
-import plugins_manager as plugins
+from shelter_core import plugin_catalog as catalog
+from shelter_core import plugins_manager as plugins
 from tests.test_plugins import package, manifest
 
 

@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-import llm
-import agent_runtime
+from shelter_core import llm
+from shelter_core import agent_runtime
 
 MODELS = {"provider":"ollama", "model":"chat", "tools":["screen"], "api_key":"old-key",
           "routes":{"vision":"eyes"},

@@ -8,9 +8,9 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import desktop_intent
-import llm_connections
-import main
+from shelter_core import desktop_intent
+from shelter_core import llm_connections
+from shelter_core import main
 
 CASES = [
     ("Тыкни, пожалуйста, правой мышкой", "click"),
@@ -58,7 +58,7 @@ def run():
     for phrase, expected in CASES:
         started = time.monotonic()
         if primary:
-            import llm
+            from shelter_core import llm
             llm._history.clear()
             request = desktop_intent.Request(phrase, config)
             value = {"decision":"none", "command":{}, "question":""}

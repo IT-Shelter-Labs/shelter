@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import voice  # noqa: E402
+from shelter_core import voice  # noqa: E402
 
 COMMANDS = [
     {"keywords": ["привет*", "здравствуй*"], "description": "hello", "keep_listening": True,
@@ -41,12 +41,12 @@ class LongPhrases(unittest.TestCase):
 
 class AvatarGestures(unittest.TestCase):
     def test_wave_inside_instruction_is_not_a_gesture(self):
-        import avatar_motion
+        from shelter_core import avatar_motion
         self.assertIsNone(avatar_motion.command("когда я скажу пока ты мне помаши", {}))
         self.assertEqual(avatar_motion.command("помаши мне рукой", {})["animation"], "wave")
 
     def test_jarvis_mode_does_not_intercept_gestures(self):
-        import fastpath
+        from shelter_core import fastpath
         calls = []
         fastpath.handle("перейди на второй монитор", {"llm": {"tools": []}, "ui": {"mode": "hud"}},
                         run_tool=lambda name, arg: calls.append(name) or ("done", ""))
@@ -68,8 +68,8 @@ class FallbackVoice(unittest.TestCase):
 
 class MediaFallback(unittest.TestCase):
     def test_missing_player_uses_system_media(self):
-        import actions
-        import media
+        from shelter_core import actions
+        from shelter_core import media
         with patch.object(actions, "_send_app_command", side_effect=RuntimeError("окно процесса Spotify.exe не найдено")), \
              patch.object(media, "control", return_value=True) as control:
             actions.run_action({"type": "media", "key": "next"})
