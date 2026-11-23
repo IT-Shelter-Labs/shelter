@@ -262,7 +262,7 @@ class WakeService : Service() {
         mutableStatus.value = ""
         CoroutineScope(Dispatchers.IO).launch {
             previous?.join()
-            chat.brain.close()
+            chat.closeLocal()
             db.close()
         }
         super.onDestroy()

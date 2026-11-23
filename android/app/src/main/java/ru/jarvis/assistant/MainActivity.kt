@@ -164,7 +164,7 @@ class MainActivity : Activity(), RecognitionListener {
     override fun onDestroy() {
         recognizer?.destroy(); sound.close(); tts?.shutdown(); pc.cancel(); chat.cancel()
         scope.cancel()
-        CoroutineScope(Dispatchers.IO).launch { brain.close(); db.close() }
+        CoroutineScope(Dispatchers.IO).launch { chat.closeLocal(); db.close() }
         super.onDestroy()
     }
 
@@ -284,18 +284,20 @@ class MainActivity : Activity(), RecognitionListener {
         body.addView(text("Где будет работать помощник?", 24f).apply { setTypeface(null, Typeface.BOLD) })
         body.addView(text("Выберите режим. Его можно сменить в настройках.", 15f).apply { setTextColor(secondary) })
         body.addView(languageChoice())
-        fun option(title: String, detail: String, value: String) {
+        fun option(title: String, detail: String, value: String, available: Boolean = true) {
             val box = card(body, title)
             box.addView(text(detail, 14f).apply { setTextColor(secondary) })
             box.addView(button("Настроить") {
                 prefs.edit().putString("mode", value).putBoolean("onboarded", true).apply()
                 screen = "settings"
                 build()
-            })
+            }.apply { isEnabled = available })
         }
         option("Мой компьютер", "Подключитесь по коду, чтобы пользоваться моделями, голосом и командами своего ПК.", "pc")
         option("Облако", "Выберите провайдера и модель. Нужен ключ вашего сервиса.", "cloud")
-        if (BuildConfig.LOCAL_MODEL) option("На устройстве", "Для беседы скачайте компактную модель. После загрузки она работает без сети.", "local")
+        val localIssue = models.localIssue()
+        option("На устройстве", localIssue ?: "Для беседы скачайте компактную модель. После загрузки она работает без сети.",
+            "local", available = localIssue == null)
     }
     private fun home() {
         messages = column()
@@ -324,12 +326,19 @@ class MainActivity : Activity(), RecognitionListener {
 
     private fun emptyChat() {
         val box = card(messages, "Чем помочь?")
+        val localIssue = if (mode == "local") models.localIssue() else null
         val setup = when (mode) {
             "pc" -> if (chat.token.isBlank()) "Подключить компьютер" else null
             "cloud" -> if (prefs.getString("cloud", "").isNullOrBlank()) "Настроить облачную модель" else null
-            else -> if (!models.local.isFile && !models.imported.isFile) "Загрузить модель для беседы" else null
+            else -> when {
+                localIssue != null -> "Сменить режим"
+                !models.local.isFile && !models.imported.isFile -> "Загрузить модель для беседы"
+                else -> null
+            }
         }
-        box.addView(text(if (setup == null) "Напишите сообщение или нажмите «Говорить»." else "Сначала настройте выбранный режим. Время и дата доступны на телефоне.", 14f).apply { setTextColor(secondary) })
+        val hint = localIssue ?: if (setup == null) "Напишите сообщение или нажмите «Говорить»."
+            else "Сначала настройте выбранный режим. Время и дата доступны на телефоне."
+        box.addView(text(hint, 14f).apply { setTextColor(secondary) })
         if (setup != null) box.addView(button(setup) { navigate("settings") })
     }
     private fun line(role: String, value: String): TextView = text(labels.text(if (role == "user") "Вы" else if (mode == "pc") "Помощник" else "Пиппа") + "\n" + value, translate = false).apply {
@@ -385,8 +394,11 @@ class MainActivity : Activity(), RecognitionListener {
             }
         }
         val general = card(body, "Режим и оформление")
-        val modes = listOf("Мой компьютер", "Облако", "На устройстве").map(labels::text)
-        val ids = listOf("pc", "cloud", "local")
+        val localIssue = models.localIssue()
+        val modeNames = listOf("pc" to "Мой компьютер", "cloud" to "Облако", "local" to "На устройстве")
+            .filter { (id, _) -> id != "local" || localIssue == null || mode == "local" }
+        val ids = modeNames.map { it.first }
+        val modes = modeNames.map { labels.text(it.second) }
         val select = Spinner(this).apply { adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, modes); setSelection(ids.indexOf(mode).coerceAtLeast(0)) }
         general.addView(select)
         select.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -397,13 +409,14 @@ class MainActivity : Activity(), RecognitionListener {
                     stopService(Intent(this@MainActivity, WakeService::class.java))
                     prefs.edit().putString("mode", ids[position]).apply()
                     applyTts()
-                    scope.launch { brain.close() }
+                    scope.launch { chat.closeLocal() }
                     statusText = ""
                     build()
                     startPolling()
                 }
             }
         }
+        if (localIssue != null && mode != "local") general.addView(text(localIssue, 14f).apply { setTextColor(secondary) })
         general.addView(row(button("Как в системе") { prefs.edit().putString("theme", "system").apply(); build() },
             button("Тёмная") { prefs.edit().putString("theme", "dark").apply(); build() },
             button("Светлая") { prefs.edit().putString("theme", "light").apply(); build() }))
@@ -432,15 +445,13 @@ class MainActivity : Activity(), RecognitionListener {
             cloudSettings()
         } else {
             val device = card(body, "Локальная модель")
-            device.addView(text(if (BuildConfig.LOCAL_MODEL) "Qwen3 0.6B · 347 МБ. Подходит для коротких ответов. После загрузки работает без интернета." else "Для беседы на телефоне нужна сборка Shelter Local (Android 12+). Часы и другие простые команды доступны здесь.", 14f))
-            if (BuildConfig.LOCAL_MODEL) {
-                val issue = models.localIssue()
-                if (issue != null) device.addView(text(issue, 14f))
+            if (localIssue == null) {
+                device.addView(text("Qwen3 0.6B · 347 МБ. Подходит для коротких ответов. После загрузки работает без интернета.", 14f))
                 if (models.local.isFile || models.imported.isFile) {
                     val imported = models.imported.isFile && !prefs.getBoolean("prefer_downloaded_model", false)
                     device.addView(text(if (imported) "Активна импортированная модель" else "Активна Qwen3 0.6B", 14f).apply { setTextColor(accent) })
                 }
-                if (!models.local.isFile) device.addView(button("Скачать Qwen3 0.6B") { download(false) }.apply { isEnabled = issue == null && downloadJob?.isActive != true })
+                if (!models.local.isFile) device.addView(button("Скачать Qwen3 0.6B") { download(false) }.apply { isEnabled = downloadJob?.isActive != true })
                 if (models.local.isFile && models.imported.isFile) device.addView(row(
                     button("Использовать Qwen3") { chooseModel(true) },
                     button("Использовать импортированную") { chooseModel(false) },
@@ -449,7 +460,9 @@ class MainActivity : Activity(), RecognitionListener {
                     if (downloadJob?.isActive != true) startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                         type = "*/*"; addCategory(Intent.CATEGORY_OPENABLE)
                     }, 8)
-                }.apply { isEnabled = issue == null && downloadJob?.isActive != true })
+                }.apply { isEnabled = downloadJob?.isActive != true })
+            } else {
+                device.addView(text(localIssue, 14f))
             }
         }
         voiceSettings()
@@ -499,7 +512,7 @@ class MainActivity : Activity(), RecognitionListener {
         stop(false)
         stopService(Intent(this, WakeService::class.java))
         prefs.edit().putBoolean("prefer_downloaded_model", downloaded).apply()
-        scope.launch { brain.close() }
+        scope.launch { chat.closeLocal() }
         build()
     }
 
@@ -590,7 +603,7 @@ class MainActivity : Activity(), RecognitionListener {
                 else {
                     stop(false)
                     stopService(Intent(this@MainActivity, WakeService::class.java))
-                    brain.close()
+                    chat.closeLocal()
                     models.downloadLocal(progress) { brain.validate(it.absolutePath, 1280) }
                     prefs.edit().putBoolean("prefer_downloaded_model", true).apply()
                 }
@@ -792,7 +805,7 @@ class MainActivity : Activity(), RecognitionListener {
         recognizer?.destroy()
         recognizer = null
         scope.launch {
-            brain.close()
+            chat.closeLocal()
             if (!hasWindowFocus()) { state("Включите фоновый микрофон из открытого приложения."); return@launch }
             try { startForegroundService(Intent(this@MainActivity, WakeService::class.java)) }
             catch (_: IllegalStateException) { state("Включите фоновый микрофон из открытого приложения.") }
@@ -850,13 +863,13 @@ class MainActivity : Activity(), RecognitionListener {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode != 8 || resultCode != RESULT_OK) return
         val uri = data?.data ?: return
-        if (downloadJob?.isActive == true || !BuildConfig.LOCAL_MODEL) return
+        if (downloadJob?.isActive == true || models.localIssue() != null) return
         downloadState = "Копирую модель на телефон…"
         downloadJob = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 stop(false)
                 stopService(Intent(this@MainActivity, WakeService::class.java))
-                brain.close()
+                chat.closeLocal()
                 withContext(Dispatchers.IO) {
                 val folder = File(filesDir, "models").apply { mkdirs() }
                 val partial = File(folder, "assistant.import.litertlm")

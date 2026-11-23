@@ -38,7 +38,7 @@ config.public.yaml. Исключены Git-история, data, модели, �
 Подготовьте NSIS-установщик из чистого снимка. Соберите Linux x86_64 в
 Ubuntu 24.04 и положите исполняемый файл Tauri в папку сборки под именем
 `shelter-desktop`, библиотеку из `bin/libjarvis_native.so` — рядом с ним.
-Для Android соберите варианты Companion и Local в режимах Debug и Release.
+Для Android соберите единый APK в режимах Debug и Release.
 Не передавайте ключ подписи вместе с комплектом.
 
 ```powershell

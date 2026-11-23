@@ -34,11 +34,11 @@ python3 tools/install_linux.py --light-recognition
 
 ## Android
 
-**Shelter** 支持 Android 8 及以上。**Shelter Local** 支持 Android 12 及以上，并增加端侧模型聊天。两个版本可以同时安装。
+统一的 Shelter 应用在 Android 8 及以上支持云端和电脑模式。端侧聊天需要兼容的 64 位设备和 Android 12 及以上。首次启动时可选择模式，之后可在设置中切换。旧版 APK 分为 Companion 和 Local。
 
 - **Cloud（云端）。** 选择服务商或兼容 OpenAI 的 API，输入模型 ID 和密钥。系统朗读语音可在 **Voice and microphone** 中选择。请求直接发送给服务商，对话记录保存在手机上。
 - **My computer（我的电脑）。** 在电脑端打开 **Connections → Phone**，启用家庭网络访问并记下地址，默认端口通常为 `8765`。在手机上输入地址，用电脑显示的代码配对。通过家庭网络使用 HTTP 时需手动启用 LAN 访问。从外部网络连接时，需要具有有效证书的 HTTPS。启用电脑朗读后，手机可以播放电脑端语音，点击 **Stop** 可中断电脑上的任务。设备访问权限可以在电脑端撤销。
-- **On device（端侧）。** 在 Shelter Local 的 **Settings → On device** 中下载 Qwen3 0.6B（约 347 MB）。应用会检查设备架构、内存、存储空间和模型文件。下载可以取消，也可以手动导入兼容的 `.litertlm` 文件。内置下载项适合简短请求。
+- **On device（端侧）。** 在 **Settings → On device** 中下载 Qwen3 0.6B（约 347 MB）。应用会检查设备架构、内存、存储空间和模型文件。下载可以取消，也可以手动导入兼容的 `.litertlm` 文件。内置下载项适合简短请求。
 - **后台麦克风。** 在 **Voice and microphone** 下载俄语 Vosk 语音包。在应用打开时启动监听并授予所需权限。说出 `Слушай, помощник`，听到提示后再说请求。可在应用内或常驻通知中停止监听。一次会话最长 30 分钟，重启后需要手动启用。模型下载和后台控制已在模拟器中验证，实体手机的麦克风行为和电池消耗仍待测试。
 
 ## 游戏
@@ -71,7 +71,7 @@ cargo test --locked --manifest-path app/src-tauri/Cargo.toml --lib
 Android 需要 JDK 21、SDK Platform 35 和 Build Tools 36.0.0。在 Windows 的 `android/` 目录中运行以下命令。
 
 ```powershell
-.\gradlew.bat --no-daemon :app:assembleCompanionDebug :app:assembleLocalDebug :app:testCompanionDebugUnitTest :app:testLocalDebugUnitTest
+.\gradlew.bat --no-daemon :app:assembleDebug :app:testDebugUnitTest
 ```
 
 在 Linux 中用 `./gradlew` 和相同参数运行。使用 `python tools/export_public.py release/github-source` 在新目录中生成公开源码快照。快照包含这些翻译，并排除个人数据与工作区 Git 历史。从快照构建发行包，发布前校验文件。[发行打包详情（俄语）](../PUBLIC_RELEASE.md) · [贡献指南](CONTRIBUTING.md)

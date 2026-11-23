@@ -1,4 +1,7 @@
 {
+  "Для локальной модели нужен Android 12 или новее.": "The on-device model needs Android 12 or later.",
+  "Для локальной модели нужен 64-разрядный Android.": "The on-device model needs 64-bit Android.",
+  "Сменить режим": "Change mode",
   "Пиппа": "Pippa",
   "Готова помочь": "Ready to help",
   "Слушаю": "Listening",

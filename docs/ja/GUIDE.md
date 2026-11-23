@@ -34,11 +34,11 @@ python3 tools/install_linux.py --light-recognition
 
 ## Android
 
-**Shelter** は Android 8 以降に対応します。**Shelter Local** は Android 12 以降で、端末内のモデルとの会話も可能です。両方を同じ端末にインストールできます。
+1 つの Shelter アプリで、Android 8 以降のクラウドモードと PC モードを利用できます。端末内のモデルを使うには、対応する 64 ビット端末と Android 12 以降が必要です。初回起動時にモードを選び、設定から変更できます。従来のリリースでは Companion と Local の 2 つの APK がありました。
 
 - **Cloud（クラウド）。** プロバイダーまたは OpenAI 互換エンドポイントを選び、モデル ID とキーを入力します。端末の読み上げ音声は **Voice and microphone** で選べます。リクエストはサービスに送られ、会話は端末に保存されます。
 - **My computer（自分の PC）。** デスクトップ版の **Connections → Phone** で自宅ネットワークからの接続を許可し、通常はポート `8765` のアドレスを確認します。スマートフォンにアドレスを入力し、PC の画面に表示されたコードでペアリングします。自宅ネットワークで HTTP を使う場合は LAN 利用を明示的に許可します。外出先からの接続には有効な証明書付きの HTTPS が必要です。PC の音声を有効にすると端末で再生でき、**Stop** で PC 側の処理を中止できます。アクセスの取り消しはデスクトップ版で行います。
-- **On device（端末上）。** Shelter Local の **Settings → On device** で Qwen3 0.6B（約 347 MB）をダウンロードします。端末のアーキテクチャ、メモリ、空き容量とモデルのファイルが確認されます。ダウンロードは中止できます。互換性のある `.litertlm` ファイルの手動インポートにも対応しています。アプリから取得できるモデルは短いリクエスト向けです。
+- **On device（端末上）。** **Settings → On device** で Qwen3 0.6B（約 347 MB）をダウンロードします。端末のアーキテクチャ、メモリ、空き容量とモデルのファイルが確認されます。ダウンロードは中止できます。互換性のある `.litertlm` ファイルの手動インポートにも対応しています。アプリから取得できるモデルは短いリクエスト向けです。
 - **バックグラウンドマイク。** **Voice and microphone** でロシア語の Vosk パックをダウンロードします。アプリを開いた状態で待ち受けを開始し、必要な権限を許可してください。`Слушай, помощник` と呼びかけ、合図の後に依頼を話します。アプリまたは常時表示の通知から待ち受けを停止できます。セッションは最長 30 分で、再起動した場合は手動で開始します。モデルのダウンロードとバックグラウンド操作はエミュレーターで確認しています。実機でのマイク動作と電池消費は未検証です。
 
 ## ゲーム
@@ -71,7 +71,7 @@ cargo test --locked --manifest-path app/src-tauri/Cargo.toml --lib
 Android には JDK 21、SDK Platform 35、Build Tools 36.0.0 が必要です。Windows では `android/` で次を実行します。
 
 ```powershell
-.\gradlew.bat --no-daemon :app:assembleCompanionDebug :app:assembleLocalDebug :app:testCompanionDebugUnitTest :app:testLocalDebugUnitTest
+.\gradlew.bat --no-daemon :app:assembleDebug :app:testDebugUnitTest
 ```
 
 Linux では同じ引数で `./gradlew` を実行します。`python tools/export_public.py release/github-source` で公開用スナップショットを新しいディレクトリに作成します。翻訳済みの文書を含み、個人データや作業用の Git 履歴は含みません。スナップショットから配布物をビルドし、公開前にチェックサムを確認します。[配布パッケージ作成の詳細（ロシア語）](../PUBLIC_RELEASE.md) · [開発への参加](CONTRIBUTING.md)

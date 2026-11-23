@@ -38,11 +38,11 @@ python3 tools/install_linux.py --light-recognition
 
 ## Android
 
-**Shelter** runs on Android 8+. **Shelter Local** runs on Android 12+ and adds chat with an on-device model. The two variants can be installed side by side.
+One Shelter app supports cloud and PC modes on Android 8+. On-device chat requires compatible 64-bit hardware and Android 12+. Pick a mode at first launch or change it in Settings. Older releases called the two APKs Companion and Local.
 
 - **Cloud.** Select your provider or an OpenAI-compatible endpoint, enter the model ID and key, and choose a system voice in **Voice and microphone**. Requests go to the provider and conversations are stored on the phone.
 - **My computer.** On desktop, open **Connections → Phone**, enable access on your home network, and note the address, usually port `8765`. On the phone, enter the address and pair using the code shown on the PC. Enable LAN HTTP explicitly for home use. Connections from outside the home network require HTTPS with a valid certificate. With PC voice enabled, the phone plays the desktop voice and **Stop** interrupts a task on the PC. You can revoke a phone from the desktop app.
-- **On device.** In Shelter Local, open **Settings → On device** and download Qwen3 0.6B (about 347 MB). The app checks architecture, memory, storage, and the download before activating it. You can cancel the download or import a compatible `.litertlm` file. The built-in download is intended for short requests.
+- **On device.** Open **Settings → On device** and download Qwen3 0.6B (about 347 MB). The app checks architecture, memory, storage, and the download before activating it. You can cancel the download or import a compatible `.litertlm` file. The built-in download is intended for short requests.
 - **Background microphone.** Download the Russian Vosk pack in **Voice and microphone**. Start listening from the open app and grant the requested permissions. Say `Слушай, помощник`, wait for the signal, then make the request. Stop listening from the app or the persistent notification. A session lasts up to 30 minutes and has to be started again after reboot. Model downloads and background controls have been exercised in an emulator. Battery use and microphone behaviour on physical phones are still unverified.
 - **Pippa on screen.** The chat portrait indicates listening, processing, and speaking. Enable **Show Pippa over other apps** and grant Android overlay permission to see the portrait during a background request. The overlay closes after the request and its close button hides it for the current interaction. The persistent microphone notification remains available.
 
@@ -78,7 +78,7 @@ cargo test --locked --manifest-path app/src-tauri/Cargo.toml --lib
 For Android, use JDK 21, SDK Platform 35, and Build Tools 36.0.0. In `android/` on Windows, run:
 
 ```powershell
-.\gradlew.bat --no-daemon :app:assembleCompanionDebug :app:assembleLocalDebug :app:testCompanionDebugUnitTest :app:testLocalDebugUnitTest
+.\gradlew.bat --no-daemon :app:assembleDebug :app:testDebugUnitTest
 ```
 
 On Linux, use `./gradlew` with the same arguments. Build a public snapshot with `python tools/export_public.py release/github-source` into a new directory. It includes these translations and excludes personal data and the working Git history. Build release artifacts from that snapshot and verify their checksums before publishing. See [release packaging notes](PUBLIC_RELEASE.md) in Russian and [contribution guidelines](../CONTRIBUTING.md).

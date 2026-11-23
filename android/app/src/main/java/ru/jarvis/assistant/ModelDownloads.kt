@@ -3,6 +3,7 @@ package ru.jarvis.assistant
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
+import android.os.Process
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -20,9 +21,9 @@ internal class ModelDownloads(private val context: Context) {
     val wake = File(context.filesDir, "wake/vosk-model-small-ru-0.22")
 
     fun localIssue(): String? {
-        if (!BuildConfig.LOCAL_MODEL || Build.SUPPORTED_64_BIT_ABIS.none { it in listOf("arm64-v8a", "x86_64") }) {
-            return "Для модели нужна сборка Shelter Local и 64-разрядный Android."
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return "Для локальной модели нужен Android 12 или новее."
+        if (!Process.is64Bit() || Build.SUPPORTED_64_BIT_ABIS.none { it in listOf("arm64-v8a", "x86_64") })
+            return "Для локальной модели нужен 64-разрядный Android."
         val memory = ActivityManager.MemoryInfo()
         context.getSystemService(ActivityManager::class.java).getMemoryInfo(memory)
         if (memory.totalMem < 2_500_000_000L) return "Для модели нужно устройство примерно с 3 ГБ ОЗУ или больше."
@@ -30,7 +31,7 @@ internal class ModelDownloads(private val context: Context) {
     }
 
     suspend fun downloadLocal(progress: (Int) -> Unit, validate: suspend (File) -> Unit) = withContext(Dispatchers.IO) {
-        require(localIssue() == null) { localIssue().orEmpty() }
+        localIssue()?.let { throw IllegalStateException(it) }
         val folder = local.parentFile!!
         folder.mkdirs()
         val partial = File(folder, "qwen.download.litertlm")

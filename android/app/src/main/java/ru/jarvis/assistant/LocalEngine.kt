@@ -7,7 +7,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-class LocalEngine(private val context: Context) {
+internal class LocalEngine(private val context: Context) {
     private val gate = Mutex()
     private var engine: Engine? = null
     private var model = ""

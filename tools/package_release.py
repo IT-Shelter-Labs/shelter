@@ -27,14 +27,9 @@ def sha256(path):
 def assemble(destination, windows, linux, android):
     prefix = f"Shelter-{release_version()}"
     apk = {
-        f"android-test/{prefix}-android-{flavor}-test.apk": android / flavor / "debug" / f"app-{flavor}-debug.apk"
-        for flavor in ("companion", "local")
+        "android-test/Shelter-android-test.apk": android / "debug" / "app-debug.apk",
+        "android-unsigned/Shelter-android-unsigned.apk": android / "release" / "app-release-unsigned.apk",
     }
-    apk.update({
-        f"android-unsigned/{prefix}-android-{flavor}-unsigned.apk":
-            android / flavor / "release" / f"app-{flavor}-release-unsigned.apk"
-        for flavor in ("companion", "local")
-    })
     linux_files = {
         "shelter-desktop": linux / "shelter-desktop",
         "bin/libjarvis_native.so": linux / "libjarvis_native.so",
