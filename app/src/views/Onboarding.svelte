@@ -3,7 +3,7 @@
 
   import { onMount, onDestroy } from "svelte";
   import { enable as enableAutostart } from "@tauri-apps/plugin-autostart";
-  import { Check, LoaderCircle, CircleAlert, Cpu, MemoryStick, MonitorCog, HardDrive, Volume2, ArrowRight } from "@lucide/svelte";
+  import { Check, LoaderCircle, CircleAlert, Cpu, MemoryStick, MonitorCog, HardDrive, Volume2, ArrowLeft, ArrowRight } from "@lucide/svelte";
   import TitleBar from "../components/TitleBar.svelte";
   import Reactor from "../components/Reactor.svelte";
   import MicMeter from "../components/MicMeter.svelte";
@@ -14,6 +14,10 @@
 
   const steps = ["Знакомство", "Компьютер", "Установка", "Микрофон", "Голос", "О вас", "Готово"];
   let step = $state(0);
+  let navigating = $state(false);
+  let voiceVisited = $state(false);
+  let stage: HTMLDivElement;
+  let unlockNavigation: ReturnType<typeof setTimeout>;
   let hw = $state<Hardware | null>(null);
   let check = $state<Record<string, any>>({});
   let plan = $state<{ id: string; title: string; state: "wait" | "run" | "ok" | "error"; note: string }[]>([]);
@@ -28,6 +32,7 @@
   let modelMode = $state<"local" | "later">("local");
   let city = $state("");
   let unlisten: (() => void) | undefined;
+  const navigationDisabled = $derived(navigating || installing || restarting);
 
   const titles: Record<string, string> = {
     python: "Среда Python",
@@ -47,7 +52,10 @@
     unlisten = await on<SetupEvent>("setup:event", onSetup);
     city = get("location.city", "auto") === "auto" ? "" : get("location.city");
   });
-  onDestroy(() => unlisten?.());
+  onDestroy(() => {
+    clearTimeout(unlockNavigation);
+    unlisten?.();
+  });
 
   async function buildPlan() {
     check = await api.setupCheck().catch(() => ({}));
@@ -67,6 +75,7 @@
   }
 
   function onSetup(e: SetupEvent) {
+    if (!installing) return;
     if (e.status === "finished") {
       installing = false;
       installed = !!e.ok && plan.every((p) => p.state === "ok");
@@ -85,6 +94,7 @@
   }
 
   function install() {
+    if (navigationDisabled) return;
     installing = true;
     api.setupInstall(plan.filter((p) => p.state !== "ok").map((p) => p.id)).catch((e) => {
       installing = false;
@@ -116,43 +126,74 @@
     heardWake = false;
   }
 
-  async function restartCore() {
+  async function restartCore(resetWake = false) {
     restarting = true;
-    await saveNow();
-    await api.coreRestart();
-    await new Promise((r) => setTimeout(r, 1500));
-    await waitConnected();
-    restarting = false;
-    micStepStarted = Date.now() / 1000;
+    try {
+      await saveNow();
+      await api.coreRestart();
+      await new Promise((r) => setTimeout(r, 1500));
+      await waitConnected();
+      if (resetWake) {
+        micStepStarted = Date.now() / 1000;
+        heardWake = false;
+      }
+    } catch (e) {
+      toastError(e);
+    } finally {
+      restarting = false;
+    }
   }
 
   $effect(() => {
-    if (step === 3 && app.feed.some((e) => e.kind === "wake" && e.time >= micStepStarted)) heardWake = true;
+    if (step === 3 && !restarting && app.feed.some((e) => e.kind === "wake" && e.time >= micStepStarted)) heardWake = true;
   });
 
-  async function next() {
-    if (step === 1) await buildPlan();
-    if (step === 2) {
-      const model = modelMode === "local" ? hw?.recommendation.model : null;
-      if (model) {
-        set("llm.provider", "ollama", false);
-        set("llm.model", model, false);
-        set("llm.enabled", true, false);
-      } else if (!Object.keys(get("llm.connections", {}) ?? {}).length && get("llm.provider", "ollama") === "ollama") {
-        set("llm.enabled", false, false);
-      }
-      set("asr.engine", preciseRecognition ? "gigaam" : "vosk", false);
-      await saveNow();
-      await startMicStep();
-    }
-    if (step === 5) {
-      set("location.city", city.trim() || "auto", false);
-      if (autostart) await enableAutostart().catch(() => {});
-    }
-    step += 1;
+  function beginNavigation(event: MouseEvent) {
+    if (navigationDisabled || event.detail > 1) return false;
+    navigating = true;
+    return true;
   }
 
-  async function finish() {
+  function showStep(target: number) {
+    step = target;
+    if (target === 4) voiceVisited = true;
+    stage.scrollTop = 0;
+    // The second click can land on a different button after the DOM changes.
+    unlockNavigation = setTimeout(() => { navigating = false; }, 500);
+  }
+
+  function previous(event: MouseEvent) {
+    if (step > 0 && beginNavigation(event)) showStep(step - 1);
+  }
+
+  async function next(event: MouseEvent) {
+    if (step >= steps.length - 1 || !beginNavigation(event)) return;
+    try {
+      if (step === 1) await buildPlan();
+      if (step === 2) {
+        const model = modelMode === "local" ? hw?.recommendation.model : null;
+        if (model) {
+          set("llm.provider", "ollama", false);
+          set("llm.model", model, false);
+          set("llm.enabled", true, false);
+        } else if (!Object.keys(get("llm.connections", {}) ?? {}).length && get("llm.provider", "ollama") === "ollama") {
+          set("llm.enabled", false, false);
+        }
+        set("asr.engine", preciseRecognition ? "gigaam" : "vosk", false);
+        await saveNow();
+        await startMicStep();
+      }
+      showStep(step + 1);
+    } catch (e) {
+      navigating = false;
+      toastError(e);
+    }
+  }
+
+  async function finish(event: MouseEvent) {
+    if (!beginNavigation(event)) return;
+    set("location.city", city.trim() || "auto", false);
+    if (autostart) await enableAutostart().catch(() => {});
     set("onboarded", true, false);
     await saveNow();
     // Ядро подхватывает все выбранные в мастере настройки.
@@ -161,6 +202,7 @@
   }
 
   async function chooseVoice(engine: string, voice?: string) {
+    if (navigationDisabled) return;
     set("tts.engine", engine, false);
     if (voice) set("tts.piper.voice", voice, false);
     await restartCore();
@@ -169,6 +211,10 @@
   const vram = $derived(Math.max(0, ...(hw?.gpus.filter((g) => !g.integrated).map((g) => g.vramGb) ?? [0])));
 </script>
 
+{#snippet backButton()}
+  <button class="btn ghost back" disabled={navigationDisabled} onclick={previous}><ArrowLeft size={16} />{uiText("Назад")}</button>
+{/snippet}
+
 <div class="wizard">
   <TitleBar maximizable={false}>
     <span class="caps brand">{uiText("Настройка Shelter")}</span>
@@ -176,19 +222,19 @@
 
   <div class="steps">
     {#each steps as s, i}
-      <div class="dot" class:done={i < step} class:current={i === step}><span>{uiText(i < step ? "✓" : i + 1)}</span>{uiText(s)}</div>
+      <div class="dot" class:done={i < step} class:current={i === step} aria-current={i === step ? "step" : undefined}><span>{uiText(i < step ? "✓" : i + 1)}</span>{uiText(s)}</div>
     {/each}
   </div>
 
-  <div class="stage">
+  <div class="stage" bind:this={stage}>
     {#key step}
-      <div class="panel fade-in">
+      <div class="panel fade-in" hidden={step === 4}>
         {#if step === 0}
           <div class="center">
             <Reactor size={240} state="listening" />
             <h1>{uiText("Добрый день, сэр.")}</h1>
             <p class="muted">{uiText("Я Джарвис — голосовой ассистент, который живёт на вашем компьютере. Понимаю речь, отвечаю голосом,\r\n              управляю программами, играми и умным домом. Настроим всё за пару минут.")}</p>
-            <button class="btn primary lg" onclick={next}>{uiText("Начать ")}<ArrowRight size={16} /></button>
+            <button class="btn primary lg" disabled={navigationDisabled} onclick={next}>{uiText("Начать ")}<ArrowRight size={16} /></button>
           </div>
         {:else if step === 1}
           <h2>{uiText("Ваш компьютер")}</h2>
@@ -217,7 +263,7 @@
           {:else}
             <div class="center"><LoaderCircle class="spin" size={28} /></div>
           {/if}
-          <div class="nav"><button class="btn primary lg" disabled={!hw} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button></div>
+          <div class="nav">{@render backButton()}<button class="btn primary lg" disabled={!hw || navigationDisabled} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button></div>
         {:else if step === 2}
           <h2>{uiText("Установка")}</h2>
           <p class="muted">{uiText("Выбранные компоненты скачиваются с официальных сайтов. Если Ollama уже установлена, используется существующая копия.")}</p>
@@ -238,18 +284,18 @@
             <div class="card ok-all"><Check size={18} />{uiText(" Всё уже установлено.")}</div>
           {/if}
           <div class="nav">
-            <button class="btn ghost" disabled={installing} onclick={() => step = 1}>{uiText("Назад")}</button>
+            {@render backButton()}
             {#if !installed}
-              <button class="btn primary lg" disabled={installing} onclick={install}>{uiText(installing ? "Устанавливаю…" : plan.some((p) => p.state === "error") ? "Повторить" : "Установить")}</button>
+              <button class="btn primary lg" disabled={navigationDisabled} onclick={install}>{uiText(installing ? "Устанавливаю…" : plan.some((p) => p.state === "error") ? "Повторить" : "Установить")}</button>
             {:else}
-              <button class="btn primary lg" onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
+              <button class="btn primary lg" disabled={navigationDisabled} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
             {/if}
           </div>
         {:else if step === 3}
           <h2>{uiText("Микрофон")}</h2>
           <p class="muted">{uiText("Выберите микрофон и скажите обычным голосом: ")}<b class="accent">{uiText("«Джарвис»")}</b>.</p>
           <div class="card">
-            <select style="width:100%" disabled={restarting} value={String(get("audio.device") ?? "")} onchange={async (e) => { const v = (e.target as HTMLSelectElement).value; set("audio.device", v === "" ? null : Number(v), false); set("audio.device_name", devices.find(d => String(d.index) === v)?.name ?? null, false); await restartCore(); }}>
+            <select style="width:100%" disabled={restarting} value={String(get("audio.device") ?? "")} onchange={async (e) => { const v = (e.target as HTMLSelectElement).value; set("audio.device", v === "" ? null : Number(v), false); set("audio.device_name", devices.find(d => String(d.index) === v)?.name ?? null, false); await restartCore(true); }}>
               <option value="">{uiText("По умолчанию Windows")}</option>
               {#each devices as d}<option value={String(d.index)}>{d.name}</option>{/each}
               {#if get("audio.device") != null && !devices.some((d) => d.index === get("audio.device"))}<option value={String(get("audio.device"))}>{uiText("Текущий микрофон (№")}{uiText(get("audio.device"))})</option>{/if}
@@ -261,30 +307,9 @@
           </div>
           <p class="dim hint">{uiText("Не срабатывает? Говорите ближе к микрофону, проверьте, что полоска прыгает, когда вы говорите, или выберите другой микрофон.")}</p>
           <div class="nav">
-            <button class="btn ghost" onclick={next}>{uiText("Пропустить")}</button>
-            <button class="btn primary lg" disabled={!heardWake} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
-          </div>
-        {:else if step === 4}
-          <h2>{uiText("Голос")}</h2>
-          <p class="muted">{uiText("Как будет звучать Джарвис. Выберите и нажмите «Прослушать».")}</p>
-          {#if hw?.recommendation.voice === "clone" || check.clone?.ok}
-            <div class="card">
-              <div class="caps">{uiText("Фирменный голос — ваша видеокарта его потянет")}</div>
-              <VoiceClone />
-            </div>
-            <div class="caps">{uiText("Или лёгкий голос")}</div>
-          {/if}
-          <div class="voices">
-            {#each [["ruslan", "Руслан"], ["irina", "Ирина"], ["dmitri", "Дмитрий"], ["denis", "Денис"]] as [id, name]}
-              {#if (check.piper?.voices ?? ["ruslan"]).includes(id)}
-                <button class="card voice" class:sel={get("tts.engine") !== "clone" && get("tts.piper.voice", "ruslan") === id} onclick={() => chooseVoice("piper", id)}><b>{uiText(name)}</b><span class="dim">{uiText("лёгкий голос, процессор")}</span></button>
-              {/if}
-            {/each}
-          </div>
-          <div class="nav">
-            <button class="btn" disabled={restarting || !app.status} onclick={() => api.say("Добрый день, сэр. Все системы в норме. Чем могу помочь?").catch(toastError)}>
-              {#if restarting}<LoaderCircle class="spin" size={15} />{:else}<Volume2 size={15} />{/if}{uiText(" Прослушать\r\n            ")}</button>
-            <button class="btn primary lg" onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
+            {@render backButton()}
+            <button class="btn ghost" disabled={navigationDisabled} onclick={next}>{uiText("Пропустить")}</button>
+            <button class="btn primary lg" disabled={!heardWake || navigationDisabled} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
           </div>
         {:else if step === 5}
           <h2>{uiText("О вас")}</h2>
@@ -293,17 +318,44 @@
             <label class="field"><span>{uiText("Ваш город — для погоды и утренней сводки")}</span><input type="text" placeholder={uiText("Например, Москва")} bind:value={city} /></label>
             <div class="row"><div class="label"><b>{uiText("Запускать вместе с Windows")}</b><span>{uiText("Джарвис будет в трее и сразу слушать")}</span></div><Toggle checked={autostart} onchange={(v) => (autostart = v)} /></div>
           </div>
-          <div class="nav"><button class="btn primary lg" onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button></div>
-        {:else}
+          <div class="nav">{@render backButton()}<button class="btn primary lg" disabled={navigationDisabled} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button></div>
+        {:else if step === 6}
           <div class="center">
             <Reactor size={200} state="speaking" />
             <h1>{uiText("Готово, сэр.")}</h1>
             <p class="muted">{uiText("Скажите ")}<b class="accent">{uiText("«Джарвис»")}</b>{uiText(" — и просите что угодно: «открой браузер», «какая погода завтра», «таймер на пять минут»,\r\n              «выключи микрофон в дискорде», «что ты умеешь?». Окно можно закрыть — Джарвис останется в трее у часов.")}</p>
-            <button class="btn primary lg" onclick={finish}>{uiText("Начать работу")}</button>
+            <div class="nav">{@render backButton()}<button class="btn primary lg" disabled={navigationDisabled} onclick={finish}>{uiText("Начать работу")}</button></div>
           </div>
         {/if}
       </div>
     {/key}
+    <!-- Keep the download and sample controls alive when revisiting Voice. -->
+    {#if voiceVisited}
+      <div class="panel fade-in" hidden={step !== 4}>
+        <h2>{uiText("Голос")}</h2>
+        <p class="muted">{uiText("Как будет звучать Джарвис. Выберите и нажмите «Прослушать».")}</p>
+        {#if hw?.recommendation.voice === "clone" || check.clone?.ok}
+          <div class="card">
+            <div class="caps">{uiText("Фирменный голос — ваша видеокарта его потянет")}</div>
+            <VoiceClone />
+          </div>
+          <div class="caps">{uiText("Или лёгкий голос")}</div>
+        {/if}
+        <div class="voices">
+          {#each [["ruslan", "Руслан"], ["irina", "Ирина"], ["dmitri", "Дмитрий"], ["denis", "Денис"]] as [id, name]}
+            {#if (check.piper?.voices ?? ["ruslan"]).includes(id)}
+              <button class="card voice" class:sel={get("tts.engine") !== "clone" && get("tts.piper.voice", "ruslan") === id} disabled={navigationDisabled} onclick={() => chooseVoice("piper", id)}><b>{uiText(name)}</b><span class="dim">{uiText("лёгкий голос, процессор")}</span></button>
+            {/if}
+          {/each}
+        </div>
+        <div class="nav">
+          {@render backButton()}
+          <button class="btn" disabled={navigationDisabled || !app.status} onclick={() => api.say("Добрый день, сэр. Все системы в норме. Чем могу помочь?").catch(toastError)}>
+            {#if restarting}<LoaderCircle class="spin" size={15} />{:else}<Volume2 size={15} />{/if}{uiText(" Прослушать\r\n            ")}</button>
+          <button class="btn primary lg" disabled={navigationDisabled} onclick={next}>{uiText("Дальше ")}<ArrowRight size={16} /></button>
+        </div>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -387,9 +439,12 @@
   .nav {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 6px;
   }
+  .nav .back { margin-inline-end: auto; }
+  .panel[hidden] { display: none; }
   .hw {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
