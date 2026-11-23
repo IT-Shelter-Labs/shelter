@@ -14,20 +14,18 @@ from shelter_core.paths import ROOT_DIR
 
 import json
 import os
+import queue
 import tempfile
 import threading
-import time
 import urllib.parse
 import urllib.request
+import uuid
 
-from shelter_core import bus
 from shelter_core import companion_devices as devices
 
 ROOT = ROOT_DIR
 STATE = os.path.join(ROOT, "data", "telegram_state.json")
 API = "https://api.telegram.org"
-ANSWER_WINDOW = 180          # сколько ждать ответа на просьбу, чтобы отправить его в чат
-
 _bot = None
 
 
@@ -54,7 +52,10 @@ class Bot:
         self.token = str(((config.get("telegram") or {}).get("token")) or os.environ.get("JARVIS_TELEGRAM_TOKEN", ""))
         self.state = _load_state()
         self.stop_event = threading.Event()
-        self.waiting = {}         # chat -> время последней просьбы: туда идут ответы и итоги
+        self.pending = {}
+        self.confirmations = {}
+        self.completed = queue.SimpleQueue()
+        self.lock = threading.Lock()
         self.threads = []
 
     # ------------------------------------------------------------- Bot API
@@ -75,25 +76,19 @@ class Bot:
         try:
             self.call("sendMessage", wait=15, **params)
         except Exception as error:
-            print(f"[telegram] не отправить: {error}")
+            print(f"[telegram] не отправить: {type(error).__name__}")
 
     # --------------------------------------------------------- входящие
     def handle(self, update):
         """Одно обновление Telegram. Возвращает, что сделано (для тестов)."""
         if "callback_query" in update:
-            query = update["callback_query"]
-            chat = query["message"]["chat"]["id"]
-            if devices.chat_device(chat) is None:
-                return "чужой"
-            try:
-                self.call("answerCallbackQuery", wait=10, callback_query_id=query["id"])
-            except Exception:
-                pass
-            return self.request(chat, {"yes": "да", "no": "нет"}.get(query.get("data"), ""))
+            return "устаревшая кнопка"
         message = update.get("message") or {}
         chat = (message.get("chat") or {}).get("id")
         if chat is None:
             return "пусто"
+        if (message.get("chat") or {}).get("type", "private") != "private":
+            return "чужой"
         text = str(message.get("text") or "").strip()
         sender = message.get("from") or {}
         if text.startswith("/start"):
@@ -103,19 +98,45 @@ class Bot:
             except ValueError as error:
                 self.send(chat, f"Не подключено: {error}. Код — в окне Джарвиса: Подключения → Telegram.")
                 return "код неверный"
-            self.send(chat, "Подключено. Пишите или отправляйте голосовые — выполнит ваш компьютер. /stop — остановить, /status — состояние.")
+            self.send(chat, "Подключено. Пишите или отправляйте голосовые. /help — команды и настройки.")
             return "подключено"
         device = devices.chat_device(chat)
         if device is None:
             self.send(chat, "Этот чат не подключён к Джарвису. Получите код в окне Джарвиса и отправьте «/start код».")
             return "чужой"
         if text == "/stop":
-            self.events.put(("interrupt", None))
-            self.send(chat, "Остановил текущую задачу.")
+            with self.lock:
+                running = self.pending.get(chat)
+                if running:
+                    running["cancelled"].set()
+                if chat in self.confirmations:
+                    self.confirmations[chat][1].clear()
+            if running:
+                self.events.put(("telegram_stop", (device["id"], running["id"])))
+            self.send(chat, "Запросил остановку вашей задачи." if running else "В этом чате нет задачи.")
             return "стоп"
         if text == "/status":
             self.send(chat, self.status())
             return "статус"
+        if text == "/help":
+            self.send(chat, "/status — состояние\n/stop — остановить свой запрос\n/scenarios — список сценариев\n/run ID — запустить сценарий\n/voice on или off — голосовые ответы\n/notify on или off — уведомления о таймерах и напоминаниях ПК")
+            return "помощь"
+        if text == "/scenarios":
+            from shelter_core import scenarios
+            items = [item for item in scenarios.load(self.config) if item.get("enabled", True)]
+            self.send(chat, "\n".join(f"{item['name']} · /run {item['id']}" for item in items[:30]) or "Нет доступных сценариев.")
+            return "сценарии"
+        if text in ("/voice on", "/voice off"):
+            self.state.setdefault("voice", {})[device["id"]] = text.endswith(" on")
+            _save_state(self.state)
+            self.send(chat, "Добавлю голос к тексту ответа." if text.endswith(" on") else "Ответы будут текстовыми.")
+            return "голос"
+        if text in ("/notify on", "/notify off"):
+            with self.lock:
+                self.state.setdefault("notify", {})[device["id"]] = text.endswith(" on")
+                _save_state(self.state)
+            self.send(chat, "Таймеры и напоминания ПК будут приходить сюда." if text.endswith(" on") else "Уведомления выключены.")
+            return "уведомления"
         if message.get("voice") and (self.config.get("telegram") or {}).get("voice", True):
             text = self.transcribe(message["voice"])
             if not text:
@@ -129,9 +150,52 @@ class Bot:
     def request(self, chat, text):
         if not text:
             return "пусто"
+        device = devices.chat_device(chat)
+        if not device:
+            return "чужой"
         from shelter_core import assistant_store as store
-        self.waiting[chat] = time.time()
-        self.events.put(("typed", {"text": text[:16000], "session_id": store.session_for()}))
+        from shelter_core import policy, remote_audio
+
+        with self.lock:
+            if chat in self.pending:
+                request = None
+            else:
+                request = {"id": uuid.uuid4().hex, "cancelled": threading.Event()}
+                self.pending[chat] = request
+                known = self.confirmations.get(chat)
+                if not known or known[0] != device["id"]:
+                    self.confirmations[chat] = (device["id"], policy.Confirmations())
+                confirm = self.confirmations[chat][1]
+        if request is None:
+            self.send(chat, "Сначала дождитесь ответа или отправьте /stop.")
+            return "занят"
+        owner = (device["id"], request["id"])
+        target = None
+        if self.state.get("voice", {}).get(owner[0]):
+            try:
+                remote_audio.open_stream(*owner)
+                target = dict(zip(("device", "request"), owner))
+            except ValueError:
+                pass
+
+        def paired():
+            return (devices.chat_device(chat) or {}).get("id") == owner[0]
+
+        def complete(reply, error, status):
+            with self.lock:
+                if self.pending.get(chat) is request:
+                    self.pending.pop(chat)
+            self.completed.put((chat, paired, target, reply, error, status))
+
+        delivery = {"owner": owner, "complete": complete, "confirmations": confirm,
+                    "active": lambda: paired() and not request["cancelled"].is_set()}
+        try:
+            session = store.paired_session(owner[0])
+            self.events.put(("typed", {"text": text[:16000], "session_id": session,
+                                       "delivery": delivery, "remote": target}))
+        except Exception:
+            remote_audio.finish_target(target)
+            complete("", "Не удалось создать запрос.", "failed")
         return "передано"
 
     def transcribe(self, voice):
@@ -141,7 +205,9 @@ class Bot:
             if int(info.get("file_size") or 0) > 5_000_000:
                 return ""
             with urllib.request.urlopen(f"{API}/file/bot{self.token}/{info['file_path']}", timeout=30) as response:
-                raw = response.read()
+                raw = response.read(5_000_001)
+            if len(raw) > 5_000_000:
+                return ""
             import io
             import numpy as np
             import soundfile
@@ -155,7 +221,7 @@ class Bot:
                 samples = resample_poly(samples, 16000 // divisor, rate // divisor).astype(np.float32)
             return asr.transcribe(samples)
         except Exception as error:
-            print(f"[telegram] голосовое не распознано: {error}")
+            print(f"[telegram] голосовое не распознано: {type(error).__name__}")
             return ""
 
     def status(self):
@@ -172,26 +238,47 @@ class Bot:
         return text
 
     # ------------------------------------------------- исходящие (итоги)
-    def forward(self, event):
-        now = time.time()
-        chats = [c for c, t in self.waiting.items() if now - t < ANSWER_WINDOW]
-        if not chats:
+    def send_voice(self, chat, target):
+        import base64
+        import io
+        import math
+        from itertools import groupby
+        import numpy as np
+        import soundfile
+        from scipy.signal import resample_poly
+        from shelter_core import remote_audio
+
+        chunks = []
+        cursor = 0
+        while True:
+            result = remote_audio.read(target["device"], target["request"], after=cursor, wait=0)
+            if result.get("error"):
+                return
+            chunks.extend(result["chunks"])
+            if result["done"]:
+                break
+            if result["after"] == cursor:
+                return
+            cursor = result["after"]
+        if not chunks:
             return
-        kind = event.get("kind")
-        text, buttons = "", None
-        if kind == "reply":
-            text = event.get("text") or ""
-            from shelter_core.policy import CONFIRMATIONS
-            if CONFIRMATIONS.active():
-                buttons = [("Да", "yes"), ("Нет", "no")]
-        elif kind == "scenario" and not event.get("step") and event.get("status") in ("done", "partial", "failed", "cancelled", "skipped"):
-            labels = {"done": "выполнено", "partial": "выполнено с ошибками", "failed": "не выполнено", "cancelled": "остановлено", "skipped": "не запущено"}
-            text = f"«{event.get('name')}»: {labels[event['status']]}" + (f" — {event['error']}" if event.get("error") else "")
-        elif kind == "error":
-            text = "Ошибка: " + str(event.get("text") or "")
-        if text:
-            for chat in chats:
-                self.send(chat, text, buttons)
+        audio = []
+        for rate, batch in groupby(chunks, key=lambda chunk: chunk["rate"]):
+            raw = b"".join(base64.b64decode(chunk["pcm"]) for chunk in batch)
+            samples = np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768
+            divisor = math.gcd(rate, 48000)
+            audio.append(resample_poly(samples, 48000 // divisor, rate // divisor))
+        output = io.BytesIO()
+        soundfile.write(output, np.concatenate(audio), 48000, format="OGG", subtype="OPUS")
+        boundary = uuid.uuid4().hex
+        prefix = (f'--{boundary}\r\nContent-Disposition: form-data; name="chat_id"\r\n\r\n{chat}\r\n'
+                  f'--{boundary}\r\nContent-Disposition: form-data; name="voice"; filename="shelter.ogg"\r\n'
+                  'Content-Type: audio/ogg\r\n\r\n').encode()
+        payload = prefix + output.getvalue() + f"\r\n--{boundary}--\r\n".encode()
+        request = urllib.request.Request(f"{API}/bot{self.token}/sendVoice", data=payload,
+                                         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        with urllib.request.urlopen(request, timeout=20) as response:
+            response.read(65_536)
 
     # ------------------------------------------------------------- потоки
     def poll(self):
@@ -201,7 +288,7 @@ class Bot:
                 updates = self.call("getUpdates", wait=40, offset=int(self.state.get("offset", 0)) + 1, timeout=25,
                                     allowed_updates=["message", "callback_query"])
             except Exception as error:
-                print(f"[telegram] нет связи: {error}")
+                print(f"[telegram] нет связи: {type(error).__name__}")
                 self.stop_event.wait(10)
                 continue
             for update in updates:
@@ -211,22 +298,44 @@ class Bot:
                 try:
                     self.handle(update)
                 except Exception as error:
-                    print(f"[telegram] сообщение не обработано: {error}")
+                    print(f"[telegram] сообщение не обработано: {type(error).__name__}")
 
-    def listen_bus(self):
-        subscriber, _recent = bus.subscribe()
-        try:
-            while not self.stop_event.is_set():
+    def deliver(self):
+        while not self.stop_event.is_set():
+            try:
+                chat, paired, target, reply, error, status = self.completed.get(timeout=1)
+            except queue.Empty:
+                continue
+            if not paired():
+                continue
+            message = "Задача остановлена." if status == "cancelled" else error or reply or "Готово."
+            self.send(chat, message)
+            if target and status == "done" and paired():
                 try:
-                    event = subscriber.get(timeout=1)
-                except Exception:
-                    continue
-                self.forward(event)
-        finally:
-            bus.unsubscribe(subscriber)
+                    self.send_voice(chat, target)
+                except Exception as voice_error:
+                    print(f"[telegram] голос не отправлен: {type(voice_error).__name__}")
+
+    def reminder(self, item, missed):
+        prefix = "Пропущено: " if missed else ""
+        subject = "Таймер" if item.get("kind") == "timer" else "Напоминание"
+        label = (item.get("label") or "").strip()
+        message = prefix + subject + (f" · {label}" if label else "")
+        with self.lock:
+            enabled = self.state.get("notify", {}).copy()
+        for device in devices.devices():
+            if device["kind"] == "telegram" and not device["revoked"] and enabled.get(device["id"]):
+                chat, owner = device["chat"], device["id"]
+
+                def paired(chat=chat, owner=owner):
+                    with self.lock:
+                        active = self.state.get("notify", {}).get(owner)
+                    return active and (devices.chat_device(chat) or {}).get("id") == owner
+
+                self.completed.put((chat, paired, None, message, "", "done"))
 
     def start(self):
-        for target, name in ((self.poll, "telegram"), (self.listen_bus, "telegram-out")):
+        for target, name in ((self.poll, "telegram"), (self.deliver, "telegram-out")):
             thread = threading.Thread(target=target, name=name, daemon=True)
             thread.start()
             self.threads.append(thread)
@@ -251,6 +360,11 @@ def stop():
     if _bot is not None:
         _bot.stop()
         _bot = None
+
+
+def reminder(item, missed):
+    if _bot is not None:
+        _bot.reminder(item, missed)
 
 
 def check(token):

@@ -171,6 +171,20 @@ def activate_session(id):
     project = project_id(id)
     with db() as con:
         con.execute("INSERT OR REPLACE INTO meta VALUES('session',?)", (id,))
+
+
+def paired_session(key):
+    """Keep a paired device's conversation separate from the active desktop project."""
+    setting_key = "paired_session:" + key
+    with db() as con:
+        entry = con.execute("SELECT value FROM meta WHERE key=?", (setting_key,)).fetchone()
+        if entry and con.execute("SELECT id FROM sessions WHERE id=?", (entry[0],)).fetchone():
+            return entry[0]
+        id = uid()
+        now = time.time()
+        con.execute("INSERT INTO sessions VALUES(?,?,?,?,?)", (id, "", "Telegram", now, now))
+        con.execute("INSERT OR REPLACE INTO meta VALUES(?,?)", (setting_key, id))
+        return id
         con.execute("INSERT OR REPLACE INTO meta VALUES('project',?)", (project,))
 
 

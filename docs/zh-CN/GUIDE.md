@@ -46,8 +46,8 @@ python3 tools/install_linux.py --light-recognition
 | 游戏 | 接入步骤 | 操作和兼容性 |
 | --- | --- | --- |
 | **Minecraft Java 版** | 在 **Games → Minecraft** 选择使用独立账户的模式。需要 Node.js 22 或更高版本，以及另一个有 Java 版使用权限的 Microsoft 帐户。填写玩家名和服务器地址，必要时将伙伴加入白名单。 | 使用 `!jarvis координаты` 查询坐标、`!jarvis иди за мной` 跟随、`!jarvis стоп` 停止。Paper 1.21.5 安装物品栏插件后，可在伙伴附近输入 `!inv`。Paper 1.21.11 和 Fabric/Carpet 1.21.11 提供无需单独账户的适配器。独立的 NeoForge 1.21.1 模组支持 `/companion summon` 和 `!inv`。请按世界版本选择适配器。 |
-| **Factorio 2.0 / 2.1** | 在 **Games → Factorio** 准备模组，将 ZIP 放入 `mods` 目录，在游戏中运行 `/shelter-export`。 | 使用 `/shelter-craft iron-gear-wheel 10` 创建十个齿轮的制作任务，在 Shelter 查看进度。`/shelter-stop` 停止添加新任务，已加入队列的制作可在 Factorio 中管理。 |
-| **钢铁雄心 IV** | 准备 **Shelter Campaign Tasks**，将压缩包解压至游戏配置的 `mod` 目录，并在启动器中启用。 | 战役决议可创建步兵装备生产线并跟踪库存目标。发行包结构已检查，决议在实际战役中的效果仍待验证。配置视觉模型后，也可以按需描述前台游戏窗口。 |
+| **Factorio 2.0 / 2.1** | 在 **Games → Factorio** 准备 0.3.0 版模组。要从 Shelter 发出指令，请启用本机 RCON，并在游戏中运行 `/shelter-remote`。 | 查询材料、启动制作、查看进度和停止任务，也可排入研究、放置蓝图虚影或设置组装机配方。连接独立的 Factorio AI Companion 后，可以添加能够采矿和跟随玩家的角色。 |
+| **钢铁雄心 IV** | 将 HOI4 Live Tools 添加为本机 MCP 服务 `hoi4-live`。需要库存目标决议时可另行使用 **Shelter Campaign Tasks**。 | 支持战役简报、生产、科研、国策，以及在限定天数内推进和停止时间。已验证工具发现，战役内操作仍需在游戏中验证。 |
 
 游戏集成使用对应客户端或模组的权限及游戏状态。Minecraft 模组配方取决于所选适配器能访问的注册表。[游戏详细说明（俄语）](../GAMES.md) · [Minecraft 设置与命令（俄语）](../MINECRAFT.md)
 

@@ -16,7 +16,7 @@ ROOT_FILES = {"README.md","LICENSE","SECURITY.md","CONTRIBUTING.md","THIRD_PARTY
 DOC_MEDIA = ("shelter-cover-characters.webp", "shelter-desktop.webp", "shelter-personas.webp",
              "shelter-personas-more.webp", "shelter-android.webp")
 PUBLIC_PRESETS = ("pippa", "jarvis", "anime", "akai", "vain", "manju", "tsukuyomi", "cute", "yamaneko", "miku")
-EXT = {".py",".rs",".toml",".lock",".json",".svelte",".ts",".css",".html",".mjs",".cjs",".sh",".yml",".yaml",".md",".nsh",".xml",".kt",".kts",".properties",".jar",".java",".sc",".bat",".ico",".png",".vrma",".svg",".lua"}
+EXT = {".py",".rs",".toml",".lock",".json",".svelte",".ts",".css",".html",".mjs",".cjs",".sh",".yml",".yaml",".md",".nsh",".xml",".kt",".kts",".properties",".jar",".java",".sc",".bat",".ico",".png",".vrma",".svg",".lua",".mod"}
 
 def selected(root=ROOT):
     for path in root.iterdir():
@@ -28,7 +28,7 @@ def selected(root=ROOT):
             if not path.is_file(): continue
             if path.name in {"local.properties","linux_review_env.py","compare_jarvis_qwen.py"} or path.name.endswith((".bak",".tmp")): continue
             if path.suffix in EXT or path.name in {
-                "gradlew", "gradlew.bat", "Cargo.lock", "MINDCRAFT-LICENSE", "MINEPAL-LICENSE"
+                "gradlew", "gradlew.bat", "Cargo.lock", "MINDCRAFT-LICENSE", "MINEPAL-LICENSE", "AI-COMPANION-LICENSE"
             }: yield path
     for name in DOCS:
         if (root/"docs"/name).is_file(): yield root/"docs"/name

@@ -231,7 +231,7 @@ def definitions(config):
     return result[:24]
 
 
-def execute(config, argument, confirmed=False):
+def execute(config, argument, confirmed=False, *, max_chars=12000):
     from shelter_core.agent_runtime import validate
     request = json.loads(argument)
     server = next((s for s in servers(config) if s.get("id") == request.get("server") and s.get("enabled")), None)
@@ -247,7 +247,7 @@ def execute(config, argument, confirmed=False):
         return "say", f"Разрешить {server['id']} выполнить {request['tool']} с параметрами {json.dumps(request['arguments'], ensure_ascii=False)}? Скажите «да» или «нет»."
     result = connection.rpc("tools/call", {"name": request["tool"], "arguments": request["arguments"]})
     text = "\n".join(c.get("text", "") for c in result.get("content", []) if c.get("type") == "text")
-    return ("fail" if result.get("isError") else "data"), text[:12000] or "Инструмент вернул результат без текста"
+    return ("fail" if result.get("isError") else "data"), text[:max_chars] or "Инструмент вернул результат без текста"
 
 
 def stop():

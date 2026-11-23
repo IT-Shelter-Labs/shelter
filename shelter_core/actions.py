@@ -136,7 +136,7 @@ class ActionRunner:
             self._jobs.put_nowait((actions, key, self._journal(label, session_id), label))
         return True
 
-    def submit_lazy(self, factory, key=None, label=None, session_id=None, context=None):
+    def submit_lazy(self, factory, key=None, label=None, session_id=None, context=None, delivery=None):
         """Получить действия в рабочем потоке: LLM не задерживает события."""
         with self._lock:
             if self._closed or self._jobs.full():
@@ -145,7 +145,7 @@ class ActionRunner:
                 return False
             if key is not None:
                 self._active_keys.add(key)
-            self._jobs.put_nowait((factory, key, self._journal(label, session_id), label, context))
+            self._jobs.put_nowait((factory, key, self._journal(label, session_id), label, context, delivery))
         return True
 
     @staticmethod
@@ -163,12 +163,13 @@ class ActionRunner:
             actions, key, journal, label = job[:4]
             token = tasks.Token(run_id=journal[0], session_id=journal[1])
             token.remote = job[4] if len(job) > 4 else None
+            token.delivery = job[5] if len(job) > 5 else None
             self._current = token
             self.current_label = label or ""
             status = "done"
             try:
                 with tasks.scope(token):
-                    if self._closed:
+                    if self._closed or token.delivery and not token.delivery["active"]():
                         status = "cancelled"
                         continue
                     if token.run_id:
@@ -203,6 +204,8 @@ class ActionRunner:
                     if token.reply:
                         store.add_message(token.session_id, "assistant", token.reply)
                     bus.publish("task", name=token.run_id, text=status)
+                if token.delivery:
+                    token.delivery["complete"](token.reply, token.error, status)
                 self._current = None
                 self.current_label = ""
                 if key is not None:
@@ -223,11 +226,22 @@ class ActionRunner:
                     if job is not self._stop and len(job) > 4 and job[4]:
                         from shelter_core import remote_audio
                         remote_audio.finish_target(job[4], "остановлено")
+                    if job is not self._stop and len(job) > 5 and job[5]:
+                        job[5]["complete"]("", "", "cancelled")
                 except queue.Empty:
                     break
             self._active_keys.clear()
             self._jobs.put_nowait(self._stop)
         self._thread.join(timeout=2.0)
+
+    def cancel_delivery(self, owner):
+        """Cancel only jobs from one paired chat, preserving the order of other jobs."""
+        with self._lock:
+            delivery = getattr(self._current, "delivery", None)
+            if delivery and delivery["owner"] == owner:
+                self._current.cancel()
+                return True
+        return False
 
     def cancel_current(self):
         with self._lock:
@@ -249,6 +263,8 @@ class ActionRunner:
                 if len(job) > 4 and job[4]:
                     from shelter_core import remote_audio
                     remote_audio.finish_target(job[4], "остановлено")
+                if len(job) > 5 and job[5]:
+                    job[5]["complete"]("", "", "cancelled")
 
 
 def _process_windows(process_name):
@@ -624,6 +640,11 @@ def _run_scenario(action):
         raise ScenarioFailed(result["error"])
     if result["status"] == "skipped":
         print(f"[scenario] {item['name']}: {result['error']}")
+    token = tasks.current()
+    if token and getattr(tasks._root(token), "delivery", None):
+        state = {"done": "выполнен", "partial": "выполнен с ошибками", "skipped": "пропущен"}
+        tasks.reply(f"Сценарий «{item['name']}» {state.get(result['status'], result['status'])}. "
+                    + (result.get("error") or ""))
 
 
 def run_action(action):

@@ -58,6 +58,10 @@ ROUTER_RULES = """
 TOOL_TAGS = {
     "minecraft": ("[minecraft: команда] — проверить состояние или выполнить действие в Minecraft.\n",
                   "прикрой меня от монстров → [minecraft: guard]\n"),
+    "factorio": ('[factorio: {"operation":"status"}] — получить состояние Factorio. '
+                 'plan и craft принимают recipe (ID) и count (1–100), research — recipe (ID технологии), '
+                 'build — x и y, machine — recipe, x и y, stop — без аргументов. '
+                 'Для действий дождись подтверждения игры.\n', ""),
     "persona": ("[persona: id] — сменить персонажа ассистента, вместе с голосом и обликом. Используй только id из каталога. Не заявляй о смене персонажа без выполнения этого действия.\n",
                 "стань снова Джарвисом → [persona: jarvis] Возвращаюсь.\n"),
     "avatar": ("[avatar: id] — движение своего персонажа. [avatar: dance | beat | 120] — танцевать под музыку с запасным темпом 120 BPM. [avatar: move | номер монитора | положение] — передвинуть персонажа. [avatar: move | 1 | home] — на исходное место. [avatar: resize | 0.1] — шаг +10 п.п. [avatar: size | 200] — размер 200%. [avatar: scale | 2] — увеличить вдвое (0.5 — уменьшить вдвое). "
@@ -502,6 +506,8 @@ def respond(question, config, commands=None, run_tool=None, devices=()):
     tools=[] if chat_only else available_tools
     if run_tool and not chat_only and config.get("_minecraft_actions"):
         tools = [*tools, "minecraft"]
+    if run_tool and not chat_only and config.get("_factorio_actions"):
+        tools = [*tools, "factorio"]
     if chat_only:commands=[]
     if run_tool and not chat_only:
         from shelter_core import personas
@@ -578,7 +584,7 @@ def respond(question, config, commands=None, run_tool=None, devices=()):
                 if name != "offer" and TAG_TOOL.get(name, name) not in tools:
                     continue                      # выключенный инструмент — просто разговор
                 yield kind, value
-                if name in ("desktop", "type", "minecraft"):
+                if name in ("desktop", "type", "minecraft", "factorio"):
                     # Release the primary model stream before the stateless
                     # intent pass. A single-slot local server otherwise queues it.
                     stream.close()

@@ -318,18 +318,38 @@ class ControlServer:
                             folder = game_assist.ROOT / "data" / "game-mods"
                             archive = game_assist.build_hoi4_mod(folder / "shelter_campaign.zip")
                             self._send(200, {"file": str(archive)})
+                        elif data.get("op") == "hoi4-live":
+                            from shelter_core import hoi4_link
+                            self._send(200, hoi4_link.action(owner.config, data.get("action"), days=data.get("days"),
+                                                           equipment=data.get("equipment"), factories=data.get("factories"),
+                                                           target=data.get("target")))
                         elif data.get("op") == "status":
+                            from shelter_core import factorio_link
                             path = data.get("path")
                             path = Path(path) if isinstance(path, str) and path else game_assist.path_for(owner.config)
                             result = {"path": str(path), "state": None, "message": ""}
                             try:
-                                result["state"] = game_assist.snapshot(path)
+                                if factorio_link.configured(owner.config):
+                                    result.update(state={**factorio_link.request(owner.config, "status"), "age": 0},
+                                                  path="127.0.0.1 · RCON")
+                                else:
+                                    result["state"] = game_assist.snapshot(path)
                             except ValueError as error:
                                 result["message"] = str(error)
                             self._send(200, result)
+                        elif data.get("op") == "companion":
+                            from shelter_core import factorio_companion
+                            self._send(200, factorio_companion.action(owner.config, data.get("action"), text=data.get("text", ""),
+                                                                    companion_id=data.get("companion_id"), request_id=data.get("request_id"),
+                                                                    count=data.get("count")))
+                        elif data.get("op") in ("plan", "craft", "stop", "research", "build", "machine"):
+                            from shelter_core import factorio_link
+                            self._send(200, factorio_link.request(owner.config, data["op"],
+                                                                recipe=data.get("recipe"), count=data.get("count"),
+                                                                x=data.get("x"), y=data.get("y")))
                         else:
                             self._send(400, {"error": "Неизвестная операция Factorio."})
-                    except (ValueError, OSError) as error:
+                    except (ValueError, OSError, RuntimeError) as error:
                         self._send(400, {"error": str(error)})
                     return
                 if self.path == "/api/cancel":

@@ -15,10 +15,12 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.text.InputType
 import android.view.View
 import android.view.WindowInsets
@@ -59,6 +61,10 @@ class MainActivity : Activity(), RecognitionListener {
     private var draft = ""
     private var voicePermissionAction = ""
     private var statusText = ""
+    private var stage: CompanionStage? = null
+    private var speechId: String? = null
+    private var panelPhase = "Готова помочь"
+    private var panelActive = false
     private var generation = 0
     private lateinit var root: LinearLayout
     private lateinit var body: LinearLayout
@@ -82,20 +88,41 @@ class MainActivity : Activity(), RecognitionListener {
         if (!isFinishing && ::status.isInitialized) status.text = labels.text(text)
     }
     private fun fail(error: Throwable) { state(error.message?.take(240) ?: "Не удалось выполнить действие") }
+    private fun companion(phase: String, active: Boolean = true) {
+        panelPhase = phase
+        panelActive = active
+        stage?.render(labels.text(phase), active)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= 30) window.setDecorFitsSystemWindows(false)
+        if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
         screen = savedInstanceState?.getString("screen")
             ?: if (!prefs.getBoolean("onboarded", false) && !prefs.contains("mode") && !prefs.contains("cloud") && base.isBlank()) "welcome" else "home"
+        if (intent.action == WakeService.SHOW_COMPANION) screen = "home"
         draft = savedInstanceState?.getString("draft").orEmpty()
         tts = TextToSpeech(this) { result ->
             if (result == TextToSpeech.SUCCESS) applyTts()
         }
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(id: String?) { runOnUiThread { if (id == speechId) companion("Отвечаю") } }
+            override fun onDone(id: String?) = finishSpeech(id)
+            @Deprecated("Compatibility callback for installed speech engines")
+            override fun onError(id: String?) = finishSpeech(id)
+            override fun onStop(id: String?, interrupted: Boolean) = finishSpeech(id)
+        })
         build()
         scope.launch {
             WakeService.status.collect {
                 updateWakeUi()
+                when (it) {
+                    "Скажите просьбу" -> companion("Слушаю")
+                    "Обрабатываю просьбу…" -> companion("Готовлю ответ")
+                    "Озвучиваю ответ…" -> companion("Отвечаю")
+                    WakeService.WAITING -> companion("Жду голосового вызова", false)
+                    "" -> if (panelPhase == "Жду голосового вызова" || panelPhase == "Слушаю") companion("Готова помочь", false)
+                }
                 if (screen == "home" && mode != "pc" && requestJob?.isActive != true && it == WakeService.WAITING) renderHistory()
             }
         }
@@ -105,13 +132,31 @@ class MainActivity : Activity(), RecognitionListener {
         outState.putString("draft", if (screen == "home" && ::input.isInitialized) input.text.toString() else draft)
         super.onSaveInstanceState(outState)
     }
-    override fun onStart() { super.onStart(); startPolling() }
+    override fun onStart() { super.onStart(); CompanionOverlay.activityVisible.value = true; startPolling() }
+    override fun onResume() {
+        super.onResume()
+        if (screen == "settings") updateWakeUi()
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == WakeService.SHOW_COMPANION) navigate("home")
+    }
+    private fun finishSpeech(id: String?) {
+        runOnUiThread {
+            if (id == speechId) {
+                speechId = null
+                companion("Готова помочь", false)
+            }
+        }
+    }
     @Deprecated("Compatibility callback for Android back navigation")
     override fun onBackPressed() {
         if (screen == "settings" || screen == "commands") navigate("home")
         else super.onBackPressed()
     }
     override fun onStop() {
+        CompanionOverlay.activityVisible.value = false
+        companion("Готова помочь", false)
         polling?.cancel(); recognizer?.cancel(); sound.stop(); tts?.stop()
         requestJob?.cancel(); chat.cancel()
         super.onStop()
@@ -173,6 +218,7 @@ class MainActivity : Activity(), RecognitionListener {
         downloadProgress = null
         wakeLabel = null
         wakeButton = null
+        stage = null
         val gutter = dp(maxOf(16, (resources.configuration.screenWidthDp - 680) / 2))
         root = column().apply { setPadding(gutter, dp(12), gutter, dp(8)); setBackgroundColor(this@MainActivity.background) }
         if (theme == "glass") root.background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(Color.rgb(24, 62, 81), background, Color.rgb(54, 37, 76)))
@@ -196,6 +242,12 @@ class MainActivity : Activity(), RecognitionListener {
             visibility = if (screen == "welcome") View.GONE else View.VISIBLE
         }
         root.addView(status)
+        if (screen == "home") {
+            stage = CompanionStage(this, panel, ink, accent).also {
+                root.addView(it, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+                it.render(labels.text(panelPhase), panelActive)
+            }
+        }
         val scroll = ScrollView(this).apply { isFillViewport = true; clipToPadding = false; setPadding(0, dp(12), 0, dp(8)) }
         timeline = scroll
         body = column()
@@ -208,7 +260,11 @@ class MainActivity : Activity(), RecognitionListener {
 
     private fun tab(label: String, target: String) = button(label) { navigate(target) }.apply {
         isSelected = screen == target
-        if (isSelected) { setTextColor(accent); setTypeface(null, Typeface.BOLD) }
+        if (isSelected) {
+            background = rounded(Color.argb(24, Color.red(accent), Color.green(accent), Color.blue(accent)))
+            setTextColor(accent)
+            setTypeface(null, Typeface.BOLD)
+        }
     }
 
     private fun navigate(target: String) {
@@ -222,6 +278,9 @@ class MainActivity : Activity(), RecognitionListener {
     }
 
     private fun welcome() {
+        body.addView(CompanionStage(this, panel, ink, accent).apply {
+            render(labels.text("Готова помочь"), false)
+        }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(14) })
         body.addView(text("Где будет работать помощник?", 24f).apply { setTypeface(null, Typeface.BOLD) })
         body.addView(text("Выберите режим. Его можно сменить в настройках.", 15f).apply { setTextColor(secondary) })
         body.addView(languageChoice())
@@ -250,12 +309,14 @@ class MainActivity : Activity(), RecognitionListener {
             minLines = 1; maxLines = 4; minHeight = dp(48)
             background = rounded(this@MainActivity.background)
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            contentDescription = labels.text("Сообщение Джарвису")
+            contentDescription = labels.text("Сообщение помощнику")
             setText(draft)
         }
         composer.addView(input)
         composer.addView(row(button("Говорить") { microphone() }, button("Стоп") { stop() }, button("Отправить") { send(input.text.toString()) }.apply {
-            setTextColor(accent); setTypeface(null, Typeface.BOLD)
+            background = rounded(accent)
+            setTextColor(if (Color.luminance(accent) > 0.45f) Color.rgb(11, 33, 28) else Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
         }))
         root.addView(composer)
         updateWakeUi()
@@ -271,7 +332,7 @@ class MainActivity : Activity(), RecognitionListener {
         box.addView(text(if (setup == null) "Напишите сообщение или нажмите «Говорить»." else "Сначала настройте выбранный режим. Время и дата доступны на телефоне.", 14f).apply { setTextColor(secondary) })
         if (setup != null) box.addView(button(setup) { navigate("settings") })
     }
-    private fun line(role: String, value: String): TextView = text(labels.text(if (role == "user") "Вы" else "Джарвис") + "\n" + value, translate = false).apply {
+    private fun line(role: String, value: String): TextView = text(labels.text(if (role == "user") "Вы" else if (mode == "pc") "Помощник" else "Пиппа") + "\n" + value, translate = false).apply {
         setPadding(dp(14), dp(10), dp(14), dp(12)); background = rounded(if (role == "user") Color.argb(24, 90, 211, 230) else panel)
         setTextIsSelectable(true); messages.addView(this, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
     }
@@ -470,6 +531,20 @@ class MainActivity : Activity(), RecognitionListener {
             voice.addView(button("Проверить голос") { speak(if (chat.voiceLocale == "en-US") "I’m ready." else "Я готов помочь.", true) })
         }
         voice.addView(text("Фоновый режим"))
+        voice.addView(CheckBox(this).apply {
+            text = labels.text("Показывать Пиппу поверх приложений")
+            setTextColor(ink)
+            isChecked = prefs.getBoolean(CompanionOverlay.PREFERENCE, false)
+            setOnCheckedChangeListener { _, enabled ->
+                prefs.edit().putBoolean(CompanionOverlay.PREFERENCE, enabled).apply()
+                if (enabled && !Settings.canDrawOverlays(this@MainActivity)) {
+                    val permission = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                    runCatching { startActivity(permission) }.onFailure { state("Разрешение наложения недоступно") }
+                }
+                updateWakeUi()
+            }
+        })
+        voice.addView(text("При фоновом вызове Пиппа появляется на время команды. Без разрешения Android остаётся уведомление.", 14f).apply { setTextColor(secondary) })
         voice.addView(text("Скажите «Слушай, помощник», дождитесь сигнала и произнесите просьбу. Запись обрабатывается на телефоне. Текст команды получает выбранный режим. Сеанс длится до 30 минут. Остановить его можно в уведомлении.", 14f).apply { setTextColor(secondary) })
         if (!models.wake.isDirectory) voice.addView(button("Скачать пакет русской речи · 45 МБ") { download(true) }.apply {
             isEnabled = downloadJob?.isActive != true
@@ -488,7 +563,10 @@ class MainActivity : Activity(), RecognitionListener {
     private fun updateWakeUi() {
         val current = WakeService.status.value
         wakeLabel?.apply {
-            text = labels.text(current.ifBlank { "Фоновый микрофон выключен" })
+            val overlayNeedsPermission = screen == "settings" && prefs.getBoolean(CompanionOverlay.PREFERENCE, false) &&
+                !Settings.canDrawOverlays(this@MainActivity)
+            text = labels.text(current.ifBlank { "Фоновый микрофон выключен" }) +
+                if (overlayNeedsPermission) "\n" + labels.text("Разрешите показ поверх приложений в Android.") else ""
             visibility = if (current.isNotBlank() || screen == "settings") View.VISIBLE else View.GONE
         }
         wakeButton?.text = labels.text(if (current.isBlank()) "Включить фоновый микрофон" else "Остановить фоновый микрофон")
@@ -591,7 +669,12 @@ class MainActivity : Activity(), RecognitionListener {
                     scenarios = answer.optJSONArray("scenarios") ?: JSONArray()
                     val next = answer.optJSONArray("messages") ?: JSONArray()
                     if (next.toString() != remoteMessages.toString()) { remoteMessages = next; renderRemote() }
-                    state(if (answer.optBoolean("speaking")) "ПК отвечает" else if (answer.optBoolean("thinking")) "ПК думает" else "Компьютер на связи")
+                    val speaking = answer.optBoolean("speaking")
+                    val thinking = answer.optBoolean("thinking")
+                    if (WakeService.status.value.isBlank() && panelPhase != "Слушаю") {
+                        companion(if (speaking) "Отвечаю" else if (thinking) "Готовлю ответ" else "Готова помочь", speaking || thinking)
+                    }
+                    state(if (speaking) "ПК отвечает" else if (thinking) "ПК думает" else "Компьютер на связи")
                 } catch (error: Exception) { if (isActive) state("Нет связи с ПК · ${error.message?.take(100)}") }
                 delay(2500)
             }
@@ -609,10 +692,11 @@ class MainActivity : Activity(), RecognitionListener {
         } catch (error: Exception) { fail(error) } }
     }
     private fun stop(remote: Boolean = true) {
+        speechId = null
         generation++; requestJob?.cancel(); chat.cancel(); sound.stop(); tts?.stop(); recognizer?.cancel()
         if (remote) stopService(Intent(this, WakeService::class.java))
         if (remote && mode == "pc" && vault.get("device").isNotEmpty()) pcPost("/api/interrupt", JSONObject())
-        if (remote) state("Остановлено")
+        if (remote) { state("Остановлено"); companion("Готова помочь", false) }
     }
     private fun send(raw: String) {
         val question = raw.trim()
@@ -625,11 +709,13 @@ class MainActivity : Activity(), RecognitionListener {
         draft = ""
         stopService(Intent(this, WakeService::class.java))
         if (mode == "pc") {
+            companion("Готовлю ответ")
             val audio = prefs.getBoolean("speak", true)
             pcPost("/api/ask", JSONObject().put("text", question).put("audio", audio), audio)
             return
         }
         stop(false)
+        companion("Готовлю ответ")
         val version = generation
         val channel = historyScope
         val context = db.recent(channel, 12)
@@ -643,22 +729,29 @@ class MainActivity : Activity(), RecognitionListener {
             state(if (selected == "local") "Модель думает на телефоне…" else "Обращаюсь к выбранному облаку…")
             val facts = db.facts().joinToString("\n") { it.second }.take(if (selected == "local") 1500 else 3000)
             val response = chat.reply(selected, question, context, facts) { partial ->
-                runOnUiThread { if (version == generation) output.text = labels.text("Джарвис") + "\n" + partial }
+                runOnUiThread { if (version == generation) output.text = labels.text("Пиппа") + "\n" + partial }
             }
             ensureActive()
             if (version != generation) return@launch
             require(response.isNotBlank()) { "Модель не вернула текст" }
             db.add(channel, "user", question); db.add(channel, "assistant", response)
-            output.text = labels.text("Джарвис") + "\n" + response; state("Готово"); speak(response)
-        } catch (error: Exception) { if (isActive && version == generation) { output.text = labels.text("Не удалось ответить: ${error.message?.take(240)}"); fail(error) } } }
+            output.text = labels.text("Пиппа") + "\n" + response; state("Готово"); speak(response)
+        } catch (error: Exception) { if (isActive && version == generation) {
+            output.text = labels.text("Не удалось ответить: ${error.message?.take(240)}")
+            companion("Готова помочь", false)
+            fail(error)
+        } } }
     }
     private fun applyTts() {
         ttsReady = tts?.configureVoice(chat.voiceLocale, mode == "local") == true
     }
 
     private fun speak(value: String, preview: Boolean = false) {
-        if (!chat.speak && !preview) return
-        if (!ttsReady || tts?.speak(value.take(2000), TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString()) != TextToSpeech.SUCCESS) {
+        if (!chat.speak && !preview) { companion("Готова помочь", false); return }
+        val id = UUID.randomUUID().toString()
+        speechId = id
+        if (!ttsReady || tts?.speak(value.take(2000), TextToSpeech.QUEUE_FLUSH, null, id) != TextToSpeech.SUCCESS) {
+            finishSpeech(id)
             state("Озвучка недоступна. Установите нужный голос в настройках Android.")
         }
     }
@@ -739,12 +832,15 @@ class MainActivity : Activity(), RecognitionListener {
             else listenOnce()
         } else state(if (requestCode == 9) "Для фонового режима нужны уведомления." else "Микрофон недоступен. Можно написать текстом.")
     }
-    override fun onReadyForSpeech(params: Bundle?) { state("Говорите просьбу") }
+    override fun onReadyForSpeech(params: Bundle?) { state("Говорите просьбу"); companion("Слушаю") }
     override fun onBeginningOfSpeech() { state("Слышу вас…") }
     override fun onRmsChanged(rmsdB: Float) {}
     override fun onBufferReceived(buffer: ByteArray?) {}
-    override fun onEndOfSpeech() { state("Распознаю…") }
-    override fun onError(error: Int) { state(if (error in listOf(SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) "Не расслышал. Нажмите «Говорить» ещё раз." else "Распознавание недоступно (код $error). Можно написать текстом.") }
+    override fun onEndOfSpeech() { state("Распознаю…"); companion("Готовлю ответ") }
+    override fun onError(error: Int) {
+        companion("Готова помочь", false)
+        state(if (error in listOf(SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) "Не расслышал. Нажмите «Говорить» ещё раз." else "Распознавание недоступно (код $error). Можно написать текстом.")
+    }
     override fun onResults(results: Bundle?) { if (screen != "home") return; results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { input.setText(it); send(it) } }
     override fun onPartialResults(results: Bundle?) { results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { if (screen == "home") input.setText(it) } }
     override fun onEvent(eventType: Int, params: Bundle?) {}

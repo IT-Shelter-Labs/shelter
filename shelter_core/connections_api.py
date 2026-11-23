@@ -58,6 +58,9 @@ def test(data, config):
             if ":" not in token:
                 return {"ok": False, "text": "Ключ бота выглядит как 123456:ABC… — его выдаёт @BotFather"}
             return telegram_bot.check(token)
+        if kind == "discord":
+            from shelter_core import discord_link
+            return {"ok": True, "text": discord_link.voice_status(data)}
         return {"ok": False, "text": "Для этого подключения проверки пока нет"}
     except Exception as error:   # сеть, токен, OBS — любая причина возвращается человеку
         return {"ok": False, "text": _reason(error)}

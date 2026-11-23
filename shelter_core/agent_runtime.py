@@ -62,6 +62,19 @@ def definitions(config, commands, devices):
             json.dumps([{ "id": p["id"], "name": p["name"], "aliases": p.get("aliases", [])} for p in characters], ensure_ascii=False),
             {"id": {"type": "string", "enum": [p["id"] for p in characters]}}, "persona", lambda a: a["id"]))
     specs, handlers = [], {}
+    if config.get("_factorio_actions"):
+        operation = {"type": "string", "enum": ["status", "plan", "craft", "stop", "research", "build", "machine"]}
+        spec = function("factorio", "Factorio: живое состояние и проверка материалов (status, plan). "
+                        "Craft и plan принимают ID рецепта и число выполнений. Research — ID технологии. "
+                        "Build размещает чертёж из курсора по x,y. Machine назначает рецепт пустому автомату по x,y. "
+                        "Действия требуют подтверждения. Не заявляй об успехе раньше ответа игры.",
+                        {"operation": operation, "recipe": string(max_length=160),
+                         "count": {"type": "integer", "minimum": 1, "maximum": 100},
+                         "x": {"type": "integer", "minimum": -1000000, "maximum": 1000000},
+                         "y": {"type": "integer", "minimum": -1000000, "maximum": 1000000}})
+        spec["function"]["parameters"]["required"] = ["operation"]
+        specs.append(spec)
+        handlers["factorio"] = ("factorio", lambda args: json.dumps(args, ensure_ascii=False))
     if config.get("_minecraft_actions"):
         from shelter_core.minecraft_intents import MODEL_SKILLS
         specs.append(function("minecraft", "Текущее состояние или действие напарника Minecraft. " + MODEL_SKILLS,

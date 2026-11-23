@@ -683,6 +683,9 @@ class _Output:
 
 def say(text, file=None):
     """file — своя запись; без неё фраза синтезируется выбранным движком."""
+    token = tasks.current()
+    if token and getattr(tasks._root(token), "delivery", None) and not getattr(tasks._root(token), "remote", None):
+        return
     from shelter_core import personas
     if file and (ENGINE in ("cloud", "silero") or personas.active()["id"] != personas.DEFAULT_ID):
         file = None    # чистый синтез или другой персонаж: записи — голос Джарвиса
@@ -734,6 +737,13 @@ def speak_stream(sentences):
     Синтез идёт впереди воспроизведения: пока звучит первая фраза, следующая
     уже генерируется, а первая начинает звучать с первой готовой порции.
     """
+    current = tasks.current()
+    if current:
+        root = tasks._root(current)
+        if getattr(root, "delivery", None) and not getattr(root, "remote", None):
+            for _ in sentences:
+                tasks.check()
+            return
     cancel_preparation()
     token = tasks.Token(tasks.current())
     ready = queue.Queue(maxsize=8)

@@ -1,9 +1,9 @@
 {
   "name": "shelter_factorio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "title": "Shelter Factorio",
   "author": "IT Shelter",
   "factorio_version": "2.0",
   "dependencies": ["base >= 2.0.0"],
-  "description": "Exports player state and runs bounded hand-crafting jobs in your world."
+  "description": "Exports player state and runs crafting jobs and research requests over an opt-in RCON bridge."
 }

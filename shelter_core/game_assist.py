@@ -1,5 +1,6 @@
 """Local Factorio telemetry and opt-in game-screen assistance."""
 from shelter_core.paths import ROOT_PATH
+from shelter_core import factorio_link
 
 import json
 import math
@@ -10,7 +11,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = ROOT_PATH
-MOD = "shelter_factorio_0.2.0"
+MOD = "shelter_factorio_0.3.0"
 SNAPSHOT = "shelter-factorio.json"
 FACTORIO = r"(?:factorio|факторио)"
 HOI4 = r"(?:hoi\s*4|hearts of iron(?: iv| 4)?|хойк[аеу]|хои\s*4)"
@@ -27,6 +28,7 @@ def build_mod(destination, branch="2.0"):
         info["factorio_version"] = branch
         archive.writestr(f"{MOD}/info.json", json.dumps(info, indent=2))
         archive.write(source / "control.lua", f"{MOD}/control.lua")
+        archive.write(source / "AI-COMPANION-LICENSE", f"{MOD}/AI-COMPANION-LICENSE")
     return destination
 
 
@@ -85,8 +87,31 @@ def snapshot(path):
 
 
 def factorio_reply(question, config):
-    data = snapshot(path_for(config))
+    body = re.sub(FACTORIO, "", question, flags=re.I).strip(" ,:")
+    body = re.sub(r"\s+в$", "", body, flags=re.I)
+    if re.fullmatch(r"(?:стоп|останови (?:задачу|производство))", body, re.I):
+        state = factorio_link.request(config, "stop")
+        return "Запуск новых рецептов остановлен." if (state.get("job") or {}).get("state") == "stopped" else "Активной задачи производства нет."
+    craft = re.fullmatch(r"(?:сделай|изготовь|скрафти|craft)\s+([0-9]{1,3})\s+([a-z0-9_-]+)", body, re.I)
+    if craft:
+        quantity, recipe = craft.groups()
+        factorio_link.request(config, "craft", recipe=recipe.lower(), count=int(quantity))
+        return f"Factorio поставила задачу {recipe} × {quantity} в очередь."
+    research_request = re.fullmatch(r"(?:начни исследование|исследуй|research)\s+([a-z0-9_-]+)", body, re.I)
+    if research_request:
+        result = factorio_link.request(config, "research", recipe=research_request[1].lower())
+        return f"Factorio подтвердила исследование {result['research']} в очереди."
+    if not re.match(r"^(?:что|какое|какая|какие|какой|где|покажи|координаты|статус|прогресс|инвентарь|исследование|status)\b", body, re.I):
+        return None
+    data = {**factorio_link.request(config, "status"), "age": 0} if factorio_link.configured(config) else snapshot(path_for(config))
     prefix = "По последнему снимку Factorio. " if data["age"] > 10 else ""
+    if re.search(r"задач|производств|craft", body, re.I):
+        job = data.get("job")
+        if not job:
+            return prefix + "Задачи производства нет."
+        states = {"waiting": "ожидает очереди", "crafting": "изготавливается", "complete": "выполнена",
+                  "blocked": "не хватает материалов или рецепт недоступен", "stopped": "остановлена", "timeout": "истекло время"}
+        return prefix + f"{job['recipe']}: {job['done']} из {job['total']}. Задача {states.get(job['state'], 'в неизвестном состоянии')}."
     if re.search(r"инвентар|рюкзак|предмет", question, re.I):
         parts = [f"{item['name']}: {item['count']}" for item in data["inventory"][:6]]
         return prefix + ("В инвентаре больше всего: " + ", ".join(parts) + "." if parts else "Инвентарь пуст.")
@@ -99,13 +124,27 @@ def factorio_reply(question, config):
 
 def answer(question, config, *, guest=False):
     text = " ".join(question.strip(" ,.?!").split())
-    if re.search(FACTORIO, text, re.I) and re.search(r"^(?:(?:в|по) )?" + FACTORIO + r"[, :]|в " + FACTORIO + "$", text, re.I):
+    if re.search(r"^(?:(?:в|по) )?" + FACTORIO + r"[, :]|в " + FACTORIO + "$", text, re.I):
         if guest:
             return "Данные игры доступны только владельцу."
         try:
             return factorio_reply(text, config)
         except ValueError as error:
             return str(error)
+    if re.search(HOI4, text, re.I):
+        phrase = re.sub(HOI4, "", text, flags=re.I).strip(" ,:")
+        phrase = re.sub(r"\s+в$", "", phrase, flags=re.I).casefold()
+        operation = {"статус кампании": "status", "сводка кампании": "briefing", "прогресс кампании": "progress",
+                     "останови кампанию": "stop"}.get(phrase)
+        if operation:
+            if guest:
+                return "Управление кампанией доступно только владельцу."
+            from shelter_core import hoi4_link
+            try:
+                reply = hoi4_link.action(config, operation)["text"]
+            except (ValueError, OSError, RuntimeError) as error:
+                return f"HOI4 Live Tools: {error}"
+            return reply[:3600]
     if not re.search(HOI4, text, re.I) or not re.search(r"^(?:посмотри|опиши|разбери|помоги|что видно|какие (?:у меня |мои )?дивизии)\b", text, re.I):
         return None
     if guest:

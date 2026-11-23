@@ -19,17 +19,25 @@
   // Значения формы — отдельно от сохранённых: «Проверить» не сохраняет, «Сохранить» не проверяет.
   let ha = $state({ url: get("smarthome.homeassistant.url", ""), token: get("smarthome.homeassistant.token", "") });
   let yandex = $state({ token: get("smarthome.yandex.token", "") });
-  let obs = $state({ url: get("obs.url", "ws://127.0.0.1:4455"), password: get("obs.password", "") });
+  let obs = $state({ url: get("obs.url", "ws://127.0.0.1:4455"), password: get("obs.password", ""), microphone: get("obs.microphone", "") });
   let telegram = $state({ token: get("telegram.token", "") });
-  let discord = $state({ mute: get("discord.mute", "ctrl+shift+f9"), deafen: get("discord.deafen", "ctrl+shift+f10") });
+  let discord = $state({
+    mute: get("discord.mute", "ctrl+shift+f9"), deafen: get("discord.deafen", "ctrl+shift+f10"),
+    bot_token: get("discord.bot_token", ""), guild_id: get("discord.guild_id", ""),
+    user_id: get("discord.user_id", ""), channel_id: get("discord.channel_id", ""),
+  });
+  function saveDiscord() {
+    for (const [key, value] of Object.entries(discord)) set("discord." + key, value.trim());
+    toast("Сохранено", "success");
+  }
 
   const cards = $derived([
     { id: "home", icon: Lightbulb, title: "Умный дом", about: "Управляйте светом, розетками и другой техникой голосом или в сценариях. Подключите Home Assistant или Умный дом Яндекса.",
       state: get("smarthome.enabled", false) ? (ha.url || yandex.token ? "on" : "need") : "off", where: "Ваша локальная сеть или облако Яндекса" },
-    { id: "obs", icon: Clapperboard, title: "OBS Studio", about: "«Сохрани момент», «начни запись». Трансляцию голосом не запускает — нарочно.",
+    { id: "obs", icon: Clapperboard, title: "OBS Studio", about: "Запись, повторы, сцены, источники и микрофон через WebSocket OBS.",
       state: obs.url ? "on" : "off", where: "На этом компьютере, WebSocket" },
-    { id: "discord", icon: Headphones, title: "Discord", about: "«Выключи микрофон в дискорде» через ваши горячие клавиши Discord.",
-      state: "on", where: "На этом компьютере, без доступа к аккаунту" },
+    { id: "discord", icon: Headphones, title: "Discord", about: "Горячие клавиши для звука, проверка голосового состояния и сообщения через бота.",
+      state: discord.guild_id && discord.user_id ? "on" : "manual", where: "Приложение Discord и ваш сервер" },
     { id: "steam", icon: Gamepad2, title: "Steam", about: "Читает библиотеку и запускает игры по названию: «запусти ведьмака».", state: "auto", where: "На этом компьютере" },
     { id: "phone", icon: Smartphone, title: "Телефон", about: "Android-клиент и пульт в браузере: команды, текст, статус и остановка. Android также воспроизводит голосовой ответ с ПК.",
       state: get("companion.enabled", false) ? "on" : "off", where: "Ваша Wi-Fi сеть; ПК должен быть включён" },
@@ -110,12 +118,14 @@
     <div class="form">
       <label class="field"><span>{uiText("Адрес")}</span><input bind:value={obs.url} /></label>
       <label class="field"><span>{uiText("Пароль WebSocket")}</span><input type="password" autocomplete="off" bind:value={obs.password} /></label>
+      <label class="field"><span>{uiText("Имя микрофона в аудиомикшере")}</span><input bind:value={obs.microphone} placeholder="Mic/Aux" /></label>
     </div>
     <div class="actions">
       <button class="btn" disabled={testing === "obs"} onclick={() => test("obs", obs)}>{#if testing === "obs"}<LoaderCircle size={14} class="spin" />{/if}{uiText(" Проверить")}</button>
-      <button class="btn primary" onclick={() => { set("obs.url", obs.url.trim()); set("obs.password", obs.password); toast("Сохранено", "success"); }}>{uiText("Сохранить")}</button>
+      <button class="btn primary" onclick={() => { set("obs.url", obs.url.trim()); set("obs.password", obs.password); set("obs.microphone", obs.microphone.trim()); toast("Сохранено", "success"); }}>{uiText("Сохранить")}</button>
     </div>
     {#if results.obs}<div class="notice {results.obs.ok ? 'ok' : 'bad'}">{uiText(results.obs.text)}</div>{/if}
+    <p class="about">{uiText("Примеры: «Статус записи в OBS», «Покажи сцены в OBS», «Выбери сцену Игра в OBS», «Выключи микрофон в OBS».")}</p>
   </section>
 {:else if open === "discord"}
   <section class="card fade-in">
@@ -125,7 +135,19 @@
       <label class="field"><span>{uiText("Микрофон в Discord")}</span><input bind:value={discord.mute} /></label>
       <label class="field"><span>{uiText("Звук в Discord")}</span><input bind:value={discord.deafen} /></label>
     </div>
-    <div class="actions"><button class="btn primary" onclick={() => { set("discord.mute", discord.mute.trim().toLowerCase()); set("discord.deafen", discord.deafen.trim().toLowerCase()); toast("Сохранено", "success"); }}>{uiText("Сохранить")}</button></div>
+    <h3>{uiText("Бот Discord")}</h3>
+    <p class="about">{uiText("Добавьте своего бота на сервер. Для чтения звука ему нужен доступ к голосовому каналу. Для сообщений укажите текстовый канал и разрешите боту туда писать.")}</p>
+    <div class="form">
+      <label class="field"><span>{uiText("Токен бота")}</span><input type="password" autocomplete="off" bind:value={discord.bot_token} /></label>
+      <label class="field"><span>{uiText("ID сервера")}</span><input inputmode="numeric" bind:value={discord.guild_id} /></label>
+      <label class="field"><span>{uiText("Ваш ID пользователя")}</span><input inputmode="numeric" bind:value={discord.user_id} /></label>
+      <label class="field"><span>{uiText("ID канала для сообщений")}</span><input inputmode="numeric" bind:value={discord.channel_id} /></label>
+    </div>
+    <div class="actions">
+      <button class="btn" disabled={testing === "discord" || !discord.guild_id || !discord.user_id} onclick={() => test("discord", discord)}>{uiText(" Проверить")}</button>
+      <button class="btn primary" onclick={saveDiscord}>{uiText("Сохранить")}</button>
+    </div>
+    {#if results.discord}<div class="notice {results.discord.ok ? 'ok' : 'bad'}">{uiText(results.discord.text)}</div>{/if}
   </section>
 {:else if open === "phone"}
   <section class="card fade-in">

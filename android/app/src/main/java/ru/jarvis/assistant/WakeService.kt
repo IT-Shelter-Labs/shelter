@@ -21,6 +21,7 @@ import android.speech.tts.UtteranceProgressListener
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import org.json.JSONObject
 import org.vosk.Model
 import org.vosk.Recognizer
@@ -31,6 +32,7 @@ class WakeService : Service() {
         private const val CHANNEL = "jarvis_microphone"
         private const val NOTIFICATION = 21
         private const val STOP = "ru.jarvis.assistant.STOP_WAKE"
+        const val SHOW_COMPANION = "ru.jarvis.assistant.SHOW_COMPANION"
         const val WAITING = "Жду «Слушай, помощник»"
         private val mutableStatus = MutableStateFlow("")
         val status = mutableStatus.asStateFlow()
@@ -41,6 +43,8 @@ class WakeService : Service() {
     private val db by lazy { History(applicationContext) }
     private val commands by lazy { MobileCommands(applicationContext, db) }
     private val labels by lazy { MobileLabels(applicationContext) }
+    private val overlay by lazy { CompanionOverlay(this) }
+    private val noticePortrait by lazy { android.graphics.BitmapFactory.decodeResource(resources, R.drawable.pippa_portrait) }
     private val pc = Transport()
     private val sound = PcAudio()
     private var listening: Job? = null
@@ -49,6 +53,20 @@ class WakeService : Service() {
     private val ttsReady = CompletableDeferred<Boolean>()
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        scope.launch {
+            status.combine(CompanionOverlay.activityVisible) { message, _ -> message }.collect { message ->
+                overlay.update(when (message) {
+                    "Скажите просьбу" -> "Слушаю"
+                    "Обрабатываю просьбу…" -> "Готовлю ответ"
+                    "Озвучиваю ответ…" -> "Отвечаю"
+                    else -> null
+                })
+            }
+        }
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, id: Int): Int {
         if (intent?.action == STOP || checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -88,12 +106,13 @@ class WakeService : Service() {
 
     private fun notification(message: String): Notification {
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), flags)
+        val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java).setAction(SHOW_COMPANION), flags)
         val stop = PendingIntent.getService(this, 1, Intent(this, WakeService::class.java).setAction(STOP), flags)
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setContentTitle(getString(R.string.app_name) + " · " + labels.text("Микрофон").lowercase())
             .setContentText(labels.text(message))
+            .setLargeIcon(noticePortrait)
             .setStyle(Notification.BigTextStyle().bigText(labels.text(message)))
             .setContentIntent(open)
             .setOngoing(true)
@@ -191,6 +210,7 @@ class WakeService : Service() {
                 val body = JSONObject().put("text", question).put("audio", voiced).put("request_id", request)
                 pc.json(base, "/api/ask", token, body, lan)
                 if (voiced) {
+                    report("Озвучиваю ответ…")
                     val audio = sound.play(base, token, request, lan) { report("Ответ ПК доступен в приложении.") }
                     try { withTimeoutOrNull(35_000) { audio.join() } } finally { sound.stop() }
                 }
@@ -200,7 +220,10 @@ class WakeService : Service() {
                 require(reply.isNotBlank()) { "Модель не вернула текст." }
                 db.add(historyScope, "user", question)
                 db.add(historyScope, "assistant", reply)
-                if (chat.speak) readReply(reply)
+                if (chat.speak) {
+                    report("Озвучиваю ответ…")
+                    readReply(reply)
+                }
             }
         } catch (error: CancellationException) {
             throw error
@@ -229,6 +252,7 @@ class WakeService : Service() {
     override fun onDestroy() {
         val previous = listening
         scope.cancel()
+        overlay.hide()
         chat.cancel()
         pc.cancel()
         sound.close()

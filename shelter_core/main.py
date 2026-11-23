@@ -365,6 +365,41 @@ def run_tool(config, name, arg, confirmed=False):
 def _run_tool(config, name, arg, confirmed=False):
     """Инструмент по тегу модели -> (исход, текст), см. llm.respond."""
     tasks.check()
+    if name == "factorio":
+        from shelter_core import factorio_link
+        if not (config.get("_factorio_actions") or confirmed) or not factorio_link.configured(config):
+            return "fail", "Управление Factorio недоступно."
+        try:
+            request = json.loads(arg)
+            operation = request["operation"]
+            if operation not in ("status", "plan", "craft", "stop", "research", "build", "machine"):
+                return "fail", "Неизвестная операция Factorio."
+            if not confirmed and operation not in ("status", "plan"):
+                label = {"craft": "запустить задачу", "stop": "остановить производство", "research": "поставить исследование в очередь",
+                         "build": "разместить чертёж", "machine": "назначить рецепт автомату"}[operation]
+                target = str(request.get("recipe") or "")[:160]
+                detail = " ".join(str(request[key])[:20] for key in ("count", "x", "y") if key in request)
+                CONFIRMATIONS.request({"actions": [{"type": "tool", "name": name, "arg": arg, "confirmed": True}]})
+                return "say", f"Подтвердите действие в Factorio: {label} {target} {detail}".rstrip() + ". Скажите «да» или «нет»."
+            result = factorio_link.request(config, operation, recipe=request.get("recipe"), count=request.get("count"),
+                                           x=request.get("x"), y=request.get("y"))
+        except (ValueError, KeyError, TypeError) as error:
+            return "fail", str(error)
+        summary = json.dumps(result, ensure_ascii=False)[:3600]
+        if operation in ("status", "plan"):
+            return "data", summary
+        if operation == "craft" and (job := result.get("job")):
+            return "say", f"Factorio: задача {job['recipe']} поставлена. Выполнено {job['done']} из {job['total']}."
+        if operation == "stop":
+            return "say", ("Запуск новых рецептов остановлен." if (result.get("job") or {}).get("state") == "stopped"
+                           else "Активной задачи Factorio нет.")
+        if operation == "build":
+            return "say", f"Factorio разместила {result['placed']} строительных призраков из {result['total']}."
+        if operation == "research":
+            return "say", f"Исследование {result['research']} в очереди Factorio."
+        if operation == "machine":
+            return "say", f"Автомат Factorio подтвердил рецепт {result['recipe']}."
+        return "fail", "Factorio не подтвердила состояние задачи."
     if name == "scenario":
         commands = config.get("commands") or []
         if not (config.get("llm") or {}).get("commands", True) or not arg.isdigit() or not 1 <= int(arg) <= len(commands):
@@ -497,6 +532,18 @@ def _run_tool(config, name, arg, confirmed=False):
         except obs.ObsError as error:
             return "fail", f"{str(error).rstrip('.')}, сэр."
         return ("done", phrase) if normal else ("say", phrase)
+    if name == "discord":
+        from shelter_core import discord_link
+        command, _, message = arg.partition("|")
+        try:
+            cfg = config.get("discord") or {}
+            if command == "notify":
+                return "done", discord_link.notify(cfg, message)
+            if command == "status":
+                return "data", discord_link.voice_status(cfg)
+        except ValueError as error:
+            return "fail", str(error)
+        return "fail", "В Discord можно проверить голосовой статус или отправить сообщение в настроенный канал."
     if name == "remember":
         return ("done", arg) if memory.remember(arg) else ("fail", "Не расслышал, что запомнить, сэр.")
     if name == "remember_project":
@@ -649,8 +696,9 @@ def _answer(config, question, guest=False):
     from shelter_core import minecraft_intents
     from shelter_core import minecraft_npc
     from shelter_core.minecraft_companion import MINECRAFT
-    game_session = None if guest else MINECRAFT.reply_session()
-    npc_session = None if guest or game_session else minecraft_npc.reply_session()
+    delivery = getattr(token, "delivery", None)
+    game_session = None if guest or delivery else MINECRAFT.reply_session()
+    npc_session = None if guest or delivery or game_session else minecraft_npc.reply_session()
 
     def publish_reply(reply, *, fast=False, game=False):
         bus.publish("reply", text=reply, fast=fast, session_id=token.session_id if token else None)
@@ -678,6 +726,45 @@ def _answer(config, question, guest=False):
     game_reply = game_assist.answer(question, config, guest=guest)
     if game_reply is not None:
         return finish_local(game_reply)
+    if not guest and re.search(r"\b" + game_assist.FACTORIO + r"\b", question, re.I):
+        from shelter_core import factorio_link
+        if factorio_link.configured(config):
+            config = {**config, "_factorio_actions": True}
+    obs_command = obs.voice_action(question)
+    if obs_command:
+        if guest:
+            return finish_local("Управление OBS доступно только владельцу.")
+        outcome, reply = run_tool(config, "obs", obs_command)
+        if outcome == "fail":
+            tasks.fail(reply)
+        return finish_local(reply)
+    from shelter_core import discord_link
+    discord_command = discord_link.voice_action(question)
+    if discord_command:
+        if guest or not policy.allowed(config, "pc"):
+            return finish_local("Управление Discord выключено в настройках или недоступно гостю.")
+        name, value = discord_command
+        try:
+            if name == "status":
+                outcome, reply = run_tool(config, "discord", "status")
+            elif name == "notify":
+                outcome, reply = run_tool(config, "discord", "notify|" + value)
+            else:
+                outcome = "say"
+                reply = discord_link.set_audio(config, name, value)
+            if outcome == "fail":
+                tasks.fail(reply)
+        except (ValueError, OSError, RuntimeError) as error:
+            reply = str(error)
+            tasks.fail(reply)
+        return finish_local(reply)
+    if delivery and question.startswith("/run "):
+        from shelter_core import scenarios
+        item = scenarios.get(question[5:].strip())
+        if not item or not item.get("enabled", True):
+            return finish_local("Сценарий выключен или не найден. Посмотрите /scenarios.")
+        return actions_for(config, "command", {"scenario": item["id"], "source": "Telegram",
+                                                "confirm": item.get("confirm")})
 
     image_request = re.fullmatch(r"(?:нарисуй|создай (?:картинку|изображение)|сгенерируй (?:картинку|изображение))"
                                  r"\s+(.+)", question.strip(), re.IGNORECASE | re.DOTALL)
@@ -738,6 +825,8 @@ def _answer(config, question, guest=False):
         CONFIRMATIONS.clear()  # A dictated «да» is text, not approval of an older action.
     kind, confirmed = (None, None) if guest or desktop_request else CONFIRMATIONS.resolve(question, config)
     if kind:
+        if delivery:
+            return actions_for(config, kind, confirmed) if confirmed else finish_local("Отменено.")
         if _events is not None:
             _events.put((kind, confirmed))
         return []
@@ -752,6 +841,8 @@ def _answer(config, question, guest=False):
             if intent["decision"] in ("execute", "clarify") and not intent.get("unavailable"):
                 command = None
     if command:
+        if delivery:
+            return actions_for(config, "command", command)
         if _events is not None:
             _events.put(("command", command))
         else:
@@ -1223,8 +1314,12 @@ def start_services(config, dry_run=False):
     threading.Thread(target=tools.load_apps, name="apps-boot", daemon=True).start()
     # Таймеры и напоминания из data/schedule.json — в том числе пропущенные.
     if not dry_run:
-        scheduler.start(lambda item, missed: _events and _events.put(
-            ("timer", {**item, "missed": missed})))
+        def timer_fired(item, missed):
+            if _events:
+                _events.put(("timer", {**item, "missed": missed}))
+            from shelter_core import telegram_bot
+            telegram_bot.reminder(item, missed)
+        scheduler.start(timer_fired)
 
 
 def chat(config):
@@ -1457,6 +1552,9 @@ def run(config, dry_run):
             if kind == "guest_ignored":
                 bus.publish("guest", text=str(payload))      # режим strict: чужой голос не слушаем
                 continue
+            if kind == "telegram_stop":
+                runner.cancel_delivery(payload)
+                continue
             if kind in ("ask", "typed", "guest"):
                 if not dry_run:
                     # Голосовой вопрос, пока идёт ответ, — скорее всего повтор (эхо,
@@ -1468,14 +1566,21 @@ def run(config, dry_run):
                         # Голосовой вопрос, пока идёт ответ, — скорее всего эхо или переспрос: пропуск.
                         # С именем («Джарвис, а ещё…») listen помечает его queue — тогда в очередь.
                         queued = kind == "typed" or bool(request.get("queue"))
+                        delivery = request.get("delivery")
+                        if delivery:
+                            submit_delivery = {"delivery": delivery}
+                        else:
+                            submit_delivery = {}
                         submitted = runner.submit_lazy(lambda question=question, guest=guest: answer(config, question, guest),
                                            key=None if queued else "ask", label=question,
                                            session_id=request.get("session_id"),
-                                           **({"context": request["remote"]} if request.get("remote") else {}))
+                                           **({"context": request["remote"]} if request.get("remote") else {}), **submit_delivery)
                         if not submitted:
                             if request.get("remote"):
                                 from shelter_core import remote_audio
                                 remote_audio.finish_target(request["remote"], "Очередь занята")
+                            if delivery:
+                                delivery["complete"]("", "Очередь занята.", "failed")
                             bus.publish("error", text="Очередь занята. Дождитесь ответа или остановите текущую задачу.")
                 else:
                     print("[событие] ask: запрос к модели пропущен")

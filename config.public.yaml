@@ -122,10 +122,18 @@ search:
 obs:
   url: "ws://127.0.0.1:4455"
   password_env: OBS_PASSWORD
+  microphone: ""       # имя источника в аудиомикшере OBS
 
 discord:
   mute: "ctrl+shift+f9"   # задайте эти же клавиши в Discord: Настройки -> Горячие клавиши
   deafen: "ctrl+shift+f10"
+  guild_id: ""
+  user_id: ""
+  channel_id: ""
+
+factorio:
+  player: ""           # заполните для управления через локальный RCON
+  rcon_port: 27015
 
 smarthome:
   enabled: false

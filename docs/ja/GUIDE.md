@@ -46,8 +46,8 @@ python3 tools/install_linux.py --light-recognition
 | ゲーム | 接続方法 | 操作と対応バージョン |
 | --- | --- | --- |
 | **Minecraft Java Edition** | **Games → Minecraft** で別アカウントを使う接続方式を選びます。Node.js 22 以降と、Java Edition を利用できる別の Microsoft アカウントが必要です。プレイヤー名とサーバーアドレスを設定し、必要に応じて仲間を許可リストに追加します。 | `!jarvis координаты`（座標）、`!jarvis иди за мной`（ついてくる）、`!jarvis стоп`（停止）を使用できます。Paper 1.21.5 ではインベントリ用プラグインを使い、仲間の近くで `!inv` を入力できます。別アカウントを用意せずに使えるアダプターには Paper 1.21.11 と Fabric/Carpet 1.21.11 があります。NeoForge 1.21.1 用の独立 Mod では `/companion summon` と `!inv` を利用できます。ワールドのバージョンに合ったものを選んでください。 |
-| **Factorio 2.0 / 2.1** | **Games → Factorio** で Mod を作成し、ZIP を `mods` に入れ、ワールドで `/shelter-export` を実行します。 | `/shelter-craft iron-gear-wheel 10` で歯車 10 個のクラフトを指示し、Shelter で進捗を確認できます。`/shelter-stop` で新規追加を停止し、登録済みのクラフトは Factorio のキューで管理します。 |
-| **Hearts of Iron IV** | **Shelter Campaign Tasks** を作成し、ゲームプロファイルの `mod` フォルダーに展開してランチャーで有効にします。 | キャンペーンのディシジョンで歩兵装備の生産ラインを追加し、備蓄目標を追跡できます。Mod の構成は確認済みですが、キャンペーン内での動作は今後の検証対象です。画像対応モデルを設定すれば、前面のゲーム画面を依頼に応じて説明できます。 |
+| **Factorio 2.0 / 2.1** | **Games → Factorio** でバージョン 0.3.0 の Mod を作成します。Shelter から操作するには、ローカル RCON を有効にしたサーバーで `/shelter-remote` を実行します。 | 材料の確認、クラフトの開始・進捗確認・停止、研究予約、設計図の配置、組立機へのレシピ設定ができます。Factorio AI Companion を別途接続すると、採掘や追従を行うキャラクターを追加できます。 |
+| **Hearts of Iron IV** | HOI4 Live Tools をローカル MCP サーバー `hoi4-live` として追加します。備蓄目標用の **Shelter Campaign Tasks** は別途利用できます。 | 戦況概要、生産、研究、国家方針、期限付きの時間進行と停止を操作できます。ツールの検出は確認済みです。キャンペーン内の動作は実機での確認が必要です。 |
 
 ゲーム連携では、対象のクライアントや Mod の権限とゲーム内の状態を使います。Minecraft の Mod レシピは選択したアダプターのレジストリに依存します。[ゲームの詳細（ロシア語）](../GAMES.md) · [Minecraft のセットアップとコマンド（ロシア語）](../MINECRAFT.md)
 

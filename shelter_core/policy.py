@@ -6,7 +6,8 @@ import time
 
 ALIASES = {"remember": "memory", "remember_project": "memory", "forget": "memory", "nowplaying": "media",
            "remind": "timer", "timers": "timer", "cancel": "timer", "briefing": "timer",
-           "clipboard": "pc", "type": "pc", "textops": "pc", "desktop": "pc", "browser_episode": "media"}
+           "clipboard": "pc", "type": "pc", "textops": "pc", "desktop": "pc", "browser_episode": "media",
+           "discord": "pc"}
 TOOLS = {"app", "pc", "weather", "search", "timer", "memory", "media", "screen", "obs", "home", "mcp"}
 
 
@@ -81,4 +82,15 @@ class Confirmations:
         return None, None
 
 
-CONFIRMATIONS = Confirmations()
+class _CurrentConfirmations:
+    def __init__(self):
+        self.desktop = Confirmations()
+
+    def __getattr__(self, name):
+        from shelter_core import tasks
+        token = tasks.current()
+        delivery = getattr(tasks._root(token), "delivery", None) if token else None
+        return getattr(delivery["confirmations"] if delivery else self.desktop, name)
+
+
+CONFIRMATIONS = _CurrentConfirmations()

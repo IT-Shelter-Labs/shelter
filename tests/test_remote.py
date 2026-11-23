@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -105,6 +106,9 @@ class CompanionHttp(Sandbox):
 class Telegram(Sandbox):
     def setUp(self):
         super().setUp()
+        from shelter_core import assistant_store
+        patch.object(assistant_store, "PATH", Path(self.dir) / "assistant.sqlite3").start()
+        patch.object(telegram_bot, "STATE", os.path.join(self.dir, "telegram_state.json")).start()
         self.events = queue.Queue()
         self.bot = telegram_bot.Bot({"telegram": {"token": "1:x"}}, self.events)
         self.sent = []
@@ -123,7 +127,7 @@ class Telegram(Sandbox):
         self.assertTrue(self.events.empty())
         code = devices.pairing_code()["code"]
         self.assertEqual(self.bot.handle(self.msg(7, f"/start {code}")), "подключено")
-        with patch("shelter_core.assistant_store.session_for", return_value="s"):
+        with patch("shelter_core.assistant_store.paired_session", return_value="s"):
             self.assertEqual(self.bot.handle(self.msg(7, "который час")), "передано")
         self.assertEqual(self.events.get_nowait()[1]["text"], "который час")
         self.assertEqual(self.bot.handle(self.msg(5, "/stop")), "чужой", "чужой не останавливает")
@@ -131,10 +135,42 @@ class Telegram(Sandbox):
     def test_stop_and_revoke(self):
         devices.pair_chat(devices.pairing_code()["code"], 7, "Telegram")
         self.assertEqual(self.bot.handle(self.msg(7, "/stop")), "стоп")
-        self.assertEqual(self.events.get_nowait()[0], "interrupt")
+        self.assertTrue(self.events.empty())
+        self.bot.handle(self.msg(7, "проверь погоду"))
+        request = self.events.get_nowait()[1]["delivery"]
+        self.assertTrue(request["active"]())
+        self.assertEqual(self.bot.handle(self.msg(7, "/stop")), "стоп")
+        self.assertEqual(self.events.get_nowait(), ("telegram_stop", request["owner"]))
+        self.assertFalse(request["active"]())
         device = devices.chat_device(7)
         devices.revoke(device["id"])
         self.assertEqual(self.bot.handle(self.msg(7, "открой браузер")), "чужой")
+
+    def test_completion_and_confirmation_belong_to_requesting_chat(self):
+        from shelter_core import policy, tasks
+        for chat in (7, 8):
+            devices.pair_chat(devices.pairing_code()["code"], chat, "Telegram")
+            self.bot.handle(self.msg(chat, "привет"))
+        a = self.events.get_nowait()[1]
+        b = self.events.get_nowait()[1]
+        self.assertNotEqual(a["session_id"], b["session_id"])
+        token = tasks.Token()
+        token.delivery = a["delivery"]
+        with tasks.scope(token):
+            policy.CONFIRMATIONS.request({"actions": []})
+        token.delivery = b["delivery"]
+        with tasks.scope(token):
+            self.assertEqual(policy.CONFIRMATIONS.resolve("да", {}), (None, None))
+        token.delivery = None
+        with tasks.scope(token):
+            self.assertEqual(policy.CONFIRMATIONS.resolve("да", {}), (None, None))
+        a["delivery"]["complete"]("Ответ первого чата", "", "done")
+        chat, paired, _, reply, _, _ = self.bot.completed.get_nowait()
+        self.assertEqual((chat, reply), (7, "Ответ первого чата"))
+        self.assertTrue(paired())
+        self.assertTrue(self.bot.completed.empty())
+        devices.revoke(a["delivery"]["owner"][0])
+        self.assertFalse(paired())
 
     def test_duplicate_update_is_skipped_by_offset(self):
         devices.pair_chat(devices.pairing_code()["code"], 7, "Telegram")

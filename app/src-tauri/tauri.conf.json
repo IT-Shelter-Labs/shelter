@@ -87,7 +87,7 @@
       "../../games/minecraft-npc/distribution/shelter-npc-0.2.0.jar": "core/games/minecraft-npc/distribution/shelter-npc-0.2.0.jar",
       "../../games/minecraft-inventory/distribution/shelter-inventory-0.1.0.jar": "core/games/minecraft-inventory/distribution/shelter-inventory-0.1.0.jar",
       "../../games/minecraft-carpet/sheltercompanion.sc": "core/games/minecraft-carpet/sheltercompanion.sc",
-      "../../games/factorio/shelter_factorio_0.2.0/": "core/games/factorio/shelter_factorio_0.2.0/",
+      "../../games/factorio/shelter_factorio_0.3.0/": "core/games/factorio/shelter_factorio_0.3.0/",
       "../../games/hoi4/": "core/games/hoi4/",
       "../../plugins/catalog/*.zip": "core/plugins/catalog/"
     },
