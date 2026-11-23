@@ -64,7 +64,7 @@ class PublicExport(unittest.TestCase):
                     self.assertEqual(profile["avatar"]["preview"], "preview.png")
                     self.assertGreater((folder / "preview.png").stat().st_size, 0)
                     self.assertIn(f"core/personas/{persona_id}/preview.png", resources)
-            for name in ("windows", "linux", "android", "android-local"):
+            for name in ("windows", "linux", "android"):
                 self.assertTrue((target / "docs/media" / f"download-{name}.png").is_file())
             for preset in (target / "personas").glob("*/persona.json"):
                 voice = json.loads(preset.read_text(encoding="utf8")).get("voice", {})

@@ -7,8 +7,7 @@
 <p align="center">
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="下载 Windows 10/11 x64"></a>
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="下载 Linux x86_64"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="下载 Android Companion APK"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="下载 Android Local APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.7/Shelter-0.1.0-alpha.7-android-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="下载 Shelter Android 版"></a>
 </p>
 
 [游戏模组 ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Jarvis v4 语音权重](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [所有版本](https://github.com/IT-Shelter-Labs/shelter/releases)
@@ -23,8 +22,7 @@ Shelter 是一款适用于 Windows、Linux 和 Android 的开源语音助手。�
 | --- | --- | --- |
 | **Windows 10/11 x64** | `Shelter-<version>-windows-x64-setup.exe` | 运行安装程序，按向导下载语音组件。 |
 | **Linux x86_64** | `Shelter-<version>-linux-x86_64.tar.gz` | 解压后运行 `python3 tools/install_linux.py --light-recognition`。Linux 支持仍处于实验阶段。 |
-| **Android 8 及以上** | **Shelter**（Companion APK） | 使用云端聊天，或与电脑上的 Shelter 配对。 |
-| **Android 12 及以上** | **Shelter Local**（Local APK） | 还支持端侧聊天。兼容的模型权重可在应用内下载。 |
+| **Android 8 及以上** | **Shelter** APK | 可选择云端聊天或连接电脑。在兼容的 64 位 Android 12 及以上设备上，可下载模型并离线聊天。 |
 
 测试版 APK 使用调试密钥签名。模型权重需要单独下载。系统要求和首次启动步骤见[指南](GUIDE.md)。
 

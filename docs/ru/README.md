@@ -7,8 +7,7 @@
 <p align="center">
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="Скачать Windows 10/11 x64"></a>
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="Скачать Linux x86_64"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Скачать Android Companion APK"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="Скачать Android Local APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.7/Shelter-0.1.0-alpha.7-android-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Скачать Shelter для Android"></a>
 </p>
 
 [Архив игровых модов](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Веса голоса Джарвиса v4](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [Все выпуски](https://github.com/IT-Shelter-Labs/shelter/releases)
@@ -25,8 +24,7 @@
 | --- | --- | --- |
 | **Windows 10/11 x64** | Установщик `Shelter-<версия>-windows-x64-setup.exe` | Выберите папку. Мастер поможет скачать компоненты распознавания и голоса. |
 | **Linux x86_64** | Архив `Shelter-<версия>-linux-x86_64.tar.gz` | Распакуйте и запустите `python3 tools/install_linux.py`. Графическая оболочка использует GTK и WebKitGTK. Поддержка Linux экспериментальная. См. [инструкцию для Linux](../LINUX.md). |
-| **Android 8+** | `Shelter` | Облачная беседа, простые команды и подключение к своему ПК. |
-| **Android 12+** | `Shelter Local` | Всё из обычной сборки и отдельная загрузка модели для беседы на устройстве. |
+| **Android 8+** | APK **Shelter** | Выберите облако или подключение к ПК. На совместимом 64-разрядном устройстве с Android 12+ можно скачать модель и общаться без сети. |
 
 Модели скачиваются отдельно. Тестовые APK подписаны отладочным ключом.
 [Подробнее про Android](../ANDROID_CLIENT.md).

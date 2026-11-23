@@ -7,8 +7,7 @@
 <p align="center">
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="Windows 10/11 x64 をダウンロード"></a>
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="Linux x86_64 をダウンロード"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Android Companion APK をダウンロード"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="Android Local APK をダウンロード"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.7/Shelter-0.1.0-alpha.7-android-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Android 版 Shelter をダウンロード"></a>
 </p>
 
 [ゲーム用 MOD の ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [ジャーヴィス v4 の音声モデル](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [すべてのリリース](https://github.com/IT-Shelter-Labs/shelter/releases)
@@ -23,8 +22,7 @@ Shelter は Windows、Linux、Android 向けのオープンソース音声アシ
 | --- | --- | --- |
 | **Windows 10/11 x64** | `Shelter-<version>-windows-x64-setup.exe` | インストーラーを実行し、セットアップ画面で音声用のコンポーネントを取得します。 |
 | **Linux x86_64** | `Shelter-<version>-linux-x86_64.tar.gz` | 展開して `python3 tools/install_linux.py --light-recognition` を実行します。Linux 対応は実験段階です。 |
-| **Android 8 以降** | **Shelter**（Companion APK） | クラウドで会話するか、スマートフォンを PC の Shelter とペアリングします。 |
-| **Android 12 以降** | **Shelter Local**（Local APK） | 端末内のモデルでも会話できます。対応するモデルはアプリからダウンロードできます。 |
+| **Android 8 以降** | **Shelter** APK | クラウドまたは PC 接続を選べます。対応する 64 ビット端末で Android 12 以降を使用している場合は、モデルをダウンロードしてオフラインで会話できます。 |
 
 テスト用 APK はデバッグ鍵で署名されています。モデルの重みは別途ダウンロードします。必要な環境と初回設定は[ガイド](GUIDE.md)をご覧ください。
 

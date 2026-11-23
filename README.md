@@ -7,8 +7,7 @@
 <p align="center">
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="docs/media/download-windows.png" width="190" height="58" alt="Download Windows 10/11 x64"></a>
   <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="docs/media/download-linux.png" width="190" height="58" alt="Download Linux x86_64"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="docs/media/download-android.png" width="190" height="58" alt="Download Android Companion APK"></a>
-  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="docs/media/download-android-local.png" width="190" height="58" alt="Download Android Local APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.7/Shelter-0.1.0-alpha.7-android-test.apk"><img src="docs/media/download-android.png" width="190" height="58" alt="Download Shelter for Android"></a>
 </p>
 
 [Game mods ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Jarvis v4 voice weights](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [All releases](https://github.com/IT-Shelter-Labs/shelter/releases)
@@ -23,8 +22,7 @@ Shelter is an open-source voice assistant for Windows, Linux, and Android. Open 
 | --- | --- | --- |
 | **Windows 10/11 x64** | `Shelter-<version>-windows-x64-setup.exe` | Run the installer and follow the setup wizard to download speech components. |
 | **Linux x86_64** | `Shelter-<version>-linux-x86_64.tar.gz` | Extract the archive and run `python3 tools/install_linux.py --light-recognition`. Linux support is experimental. |
-| **Android 8+** | **Shelter**, Companion APK | Use cloud chat or pair the phone with Shelter on your PC. |
-| **Android 12+** | **Shelter Local**, Local APK | Also supports on-device chat. Download compatible model weights from the app. |
+| **Android 8+** | **Shelter** APK | Choose cloud chat or PC connection. On compatible 64-bit devices with Android 12+, you can also download a model and chat offline. |
 
 Preview APKs are signed with a debug key. Model weights are downloaded separately. See the [installation and Android sections](docs/GUIDE.md) for requirements and first-run steps.
 

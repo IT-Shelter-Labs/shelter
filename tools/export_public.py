@@ -16,7 +16,7 @@ TRANSLATED_DOCS = ("README.md", "GUIDE.md", "CONTRIBUTING.md", "SECURITY.md", "T
 ROOT_FILES = {"README.md","LICENSE","SECURITY.md","CONTRIBUTING.md","THIRD_PARTY.md",".gitignore","config.public.yaml","requirements.txt","requirements-lock.windows.txt","requirements-optional.txt","requirements-tts.txt","app_version.py","main.py","setup_tool.py"}
 DOC_MEDIA = ("shelter-cover-characters.webp", "shelter-desktop.webp", "shelter-personas.webp",
              "shelter-personas-ru.webp", "shelter-personas-more.webp", "shelter-personas-more-ru.webp", "shelter-android.webp",
-             "download-windows.png", "download-linux.png", "download-android.png", "download-android-local.png")
+             "download-windows.png", "download-linux.png", "download-android.png")
 PUBLIC_PRESETS = ("jarvis", "pippa", "anime", "akai", "vain", "manju", "tsukuyomi", "cute", "yamaneko", "miku")
 # Original synthetic VoiceDesign sample documented in docs/HANDOFF-personas.md.
 DESIGNED_SAMPLE_SHA256 = "aae42fd4538a2ed8f90bb71e1324a4dfc6ccbb5f33f276bf779cf8afc709945e"
