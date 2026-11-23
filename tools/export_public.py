@@ -11,7 +11,7 @@ SKIP = {
 }
 DOCS = {"DEVELOPMENT.md","DESKTOP_INPUT.md","PLATFORMS.md","LINUX.md","ANDROID_CLIENT.md","AVATARS.md","COMPANION.md","CLOUD_MODELS.md","GAMES.md","MINECRAFT.md","SCENARIOS.md","PLUGINS.md","PUBLIC_RELEASE.md","RUNTIME.md"}
 ROOT_FILES = {"README.md","LICENSE","SECURITY.md","CONTRIBUTING.md","THIRD_PARTY.md",".gitignore","config.public.yaml","requirements.txt","requirements-lock.windows.txt","requirements-optional.txt","requirements-tts.txt","app_version.py","main.py","setup_tool.py"}
-DOC_MEDIA = ("shelter-cover-pippa.webp", "shelter-desktop.webp", "shelter-personas.webp",
+DOC_MEDIA = ("shelter-cover-characters.webp", "shelter-desktop.webp", "shelter-personas.webp",
              "shelter-personas-more.webp", "shelter-android.webp")
 PUBLIC_PRESETS = ("pippa", "jarvis", "anime", "akai", "vain", "manju", "tsukuyomi", "cute", "yamaneko", "miku")
 EXT = {".py",".rs",".toml",".lock",".json",".svelte",".ts",".css",".html",".mjs",".cjs",".sh",".yml",".yaml",".md",".nsh",".xml",".kt",".kts",".properties",".jar",".java",".sc",".bat",".ico",".png",".vrma",".svg",".lua"}

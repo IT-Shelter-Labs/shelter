@@ -26,7 +26,8 @@
   MinePal. Уведомления MIT находятся в `minecraft/MINDCRAFT-LICENSE` и
   `minecraft/MINEPAL-LICENSE`.
 - На снимке панели «Персонаж» показана модель Юки на основе
-  VRM1_Constraint_Twist_Sample © 2022 pixiv Inc. Условия заданы в
+  VRM1_Constraint_Twist_Sample © 2022 pixiv Inc. Её портрет использован
+  как референс для обложки README. Условия заданы в
   метаданных модели и [VRM Public License 1.0](https://vrm.dev/licenses/1.0/).
 - Портрет Пиппы — рендер общедоступной модели **Pippa** © loulou_yurika
   (ねこのゆりか). Портрет использован для обложки README; 3D-файл доступен у автора.
