@@ -26,8 +26,9 @@ tts:
   clone:
     auto_repair: true    # восстановить движок и официальную модель при запуске
     model: "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
-    reference: ""         # свой образец голоса: WAV 5–15 секунд чистой речи
-    reference_text: ""    # точная расшифровка образца
+    jarvis_adapter: "models/voices/jarvis/shelter-v4"
+    reference: "personas/jarvis/voice.wav"
+    reference_text: "Проверка завершена. Изменения сохранены, исходный документ остался на месте."
     language: Russian
     chunk: 6
     port: 8766

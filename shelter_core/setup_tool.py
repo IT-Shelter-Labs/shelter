@@ -465,7 +465,7 @@ def install_clone(model=CLONE_MODEL, *, runtime_only=False):
     # Модель голоса: скачивается в кэш Hugging Face; прогресс — по размеру кэша.
     cache = voice_assets.hub_cache() / ("models--" + model.replace("/", "--"))
     process = subprocess.Popen(
-        [python, "-c", "import sys; sys.path.insert(0,sys.argv[1]); from tts_server import resolve; resolve(sys.argv[2])", ROOT, model],
+        [python, "-c", "import sys; sys.path.insert(0,sys.argv[1]); from shelter_core.tts_server import resolve; resolve(sys.argv[2])", ROOT, model],
         creationflags=NO_WINDOW, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     while process.poll() is None:
         emit(component="clone", stage="download", done=_cache_size(cache), total=CLONE_MODEL_BYTES)
@@ -474,9 +474,33 @@ def install_clone(model=CLONE_MODEL, *, runtime_only=False):
         raise RuntimeError("не удалось скачать модель голоса; проверьте сеть и свободное место")
 
 
+def install_jarvis_voice():
+    """Fetch the exact public adapter for Shelter's bundled Jarvis reference voice."""
+    import hashlib
+    root = Path(ROOT)
+    manifest_path = root / voice_assets.JARVIS_MANIFEST
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    folder = root / voice_assets.JARVIS_ADAPTER
+    weights = folder / "adapter.safetensors"
+    if voice_assets.present(weights) and voice_assets.present(folder / "manifest.json"):
+        return
+    folder.mkdir(parents=True, exist_ok=True)
+    temporary = weights.with_suffix(".download")
+    try:
+        download("jarvis-voice", voice_assets.JARVIS_DOWNLOAD, str(temporary))
+        with temporary.open("rb") as file:
+            if hashlib.file_digest(file, "sha256").hexdigest() != manifest["sha256"]:
+                raise RuntimeError("Контрольная сумма скачанного голоса Джарвиса не совпадает")
+        shutil.copyfile(manifest_path, folder / "manifest.json")
+        os.replace(temporary, weights)
+    finally:
+        temporary.unlink(missing_ok=True)
+        temporary.with_suffix(".download.part").unlink(missing_ok=True)
+
+
 def install(component):
     lock = ("voice-runtime" if component in ("clone", "clone:1.7b", "clone-runtime") else
-            component.replace(":", "-") if component in ARCHIVES or component == "vad" or
+            component.replace(":", "-") if component in ARCHIVES or component in ("vad", "jarvis-voice") or
             component in {"piper", *("piper:" + name for name in PIPER_VOICES)} else None)
     if lock:
         with install_lock("piper-ruslan" if lock == "piper" else lock):
@@ -489,6 +513,8 @@ def _install(component):
         install_clone()
     elif component == "clone-runtime":
         install_clone(runtime_only=True)
+    elif component == "jarvis-voice":
+        install_jarvis_voice()
     elif component == "clone:1.7b":
         install_clone("Qwen/Qwen3-TTS-12Hz-1.7B-Base")
     elif component == "silero":

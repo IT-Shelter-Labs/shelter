@@ -33,13 +33,13 @@ The app interface supports Russian and English. The Japanese and Chinese transla
 
 ![Shelter desktop home with voice input, workflows, and reminders](docs/media/shelter-desktop.webp)
 
-The desktop app has ten presets. **Pippa** is active on first launch. Jarvis, Yuki, Akai, Vain, Manju, Tsukuyomi, Cute, Yamaneko, and Miku are also available. Presets change the wake word, voice, and personality. Your selection is saved across updates.
+The desktop app has ten character presets. **Jarvis** is selected on first launch. Pippa, Yuki, Akai, Vain, Manju, Tsukuyomi, Cute, Yamaneko, and Miku are also available. Presets change the wake word, voice, and personality. Your selection is saved across updates.
 
-![Shelter character catalog with Pippa selected](docs/media/shelter-personas.webp)
+![Shelter character catalog with Jarvis first, followed by Pippa and Yuki](docs/media/shelter-personas.webp)
 
-![Manju, Miku, Tsukuyomi, and Yamaneko in the catalog](docs/media/shelter-personas-more.webp)
+![More character cards and their avatar previews](docs/media/shelter-personas-more.webp)
 
-Manju’s 3D model is included. Shelter downloads the pixiv model for Yuki when selected. Pippa comes with a portrait and a link to the original VRM on the creator’s page. See the [character guide](docs/GUIDE.md) and [asset credits](THIRD_PARTY.md).
+Shelter includes 3D appearances for Yuki, Vain, Manju, and Tsukuyomi. To use Pippa’s original appearance, download the creator’s archive and attach it from her card. On a compatible NVIDIA GPU, the character voice setup downloads the trained Jarvis v4 profile and uses the bundled voice sample for Yuki and Pippa. See the [character guide](docs/GUIDE.md) and [asset credits](THIRD_PARTY.md).
 
 ## Build from source
 
@@ -68,6 +68,6 @@ Run `app/src-tauri/target/release/Jarvis.exe`. The executable keeps its original
 
 ## Data and license
 
-Local speech recognition runs on the device. Features that use search, weather, or cloud models send the requests they need to the selected services. Local models, voice samples, credentials, and project data stay out of public source exports.
+Local speech recognition runs on the device. Features that use search, weather, or cloud models send the requests they need to the selected services. Personal model files, voice recordings, credentials, and project data stay out of public source exports. The deliberately bundled character samples are listed in the [asset credits](THIRD_PARTY.md).
 
 The Shelter code is released under the [MIT license](LICENSE). Third-party components and artwork have their own terms. [Third-party notices](THIRD_PARTY.md)

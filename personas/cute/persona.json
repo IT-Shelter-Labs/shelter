@@ -15,6 +15,7 @@
   "wake_reply": "Слушаю.",
   "switch_reply": "Теперь я Кьют!",
   "voice": {
+    "preset": "designed",
     "silero": "xenia",
     "piper": "irina"
   },

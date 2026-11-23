@@ -25,7 +25,7 @@
   onMount(async () => {
     installed = !!(await api.setupCheck().catch(() => ({}) as any)).clone?.ok;
     unlisten = await on<SetupEvent>("setup:event", (e) => {
-      if (e.component !== "clone" && e.status !== "finished") return;
+      if (!installing || (e.component !== "clone" && e.component !== "jarvis-voice" && e.status !== "finished")) return;
       if (e.stage === "download" && e.total) progress = { pct: Math.min(100, Math.round(((e.done ?? 0) / e.total) * 100)), text: `модель голоса: ${((e.done ?? 0) / 1073741824).toFixed(1)} из ${(e.total / 1073741824).toFixed(1)} ГБ` };
       else if (e.text) progress = { ...progress, text: e.text };
       else if (e.stage) progress = { ...progress, text: e.stage === "extract" ? "распаковка…" : e.stage };
@@ -33,7 +33,10 @@
       if (e.status === "finished") {
         installing = false;
         api.setupCheck().then((c: any) => (installed = !!c.clone?.ok));
-        if (e.ok) toast("Фирменный голос установлен", "success");
+        if (e.ok) {
+          set("tts.engine", "clone");
+          toast("Фирменный голос установлен", "success");
+        }
       }
     });
   });
@@ -42,7 +45,9 @@
   function install() {
     installing = true;
     progress = { pct: 0, text: "готовлю…" };
-    api.setupInstall(["clone"]).catch((e) => {
+    const adapter = get<string>("tts.clone.jarvis_adapter", "");
+    const components = adapter === "models/voices/jarvis/shelter-v4" ? ["clone", "jarvis-voice"] : ["clone"];
+    api.setupInstall(components).catch((e) => {
       installing = false;
       toastError(e);
     });
@@ -86,6 +91,7 @@
   async function listen() {
     applying = true;
     try {
+      set("tts.engine", "clone", false);
       await saveNow();
       await api.coreRestart();
       const end = Date.now() + 180000;
@@ -124,7 +130,7 @@
       </button>
       <button class="btn" disabled={!!recording || importing || !app.status} onclick={pick}>
         {#if importing}<LoaderCircle class="spin" size={15} />{:else}<FolderOpen size={15} />{/if}{uiText(" Выбрать запись\n      ")}</button>
-      <button class="btn primary" disabled={!sample || applying || !app.core?.running} onclick={listen}>
+      <button class="btn primary" disabled={(!sample && !app.status?.persona_sample) || applying || !app.core?.running} onclick={listen}>
         {#if applying}<LoaderCircle class="spin" size={15} />{uiText(" Загружаю голос…")}{:else}<Volume2 size={15} />{uiText(" Прослушать")}{/if}
       </button>
     </div>
@@ -136,6 +142,8 @@
         <span><Check size={13} />{uiText(" Образец: ")}{uiText(sample)}{uiText(". Текст образца (поправьте, если распознан с ошибкой):")}</span>
         <textarea rows="2" value={sampleText} onchange={(e) => set("tts.clone.reference_text", (e.target as HTMLTextAreaElement).value.trim())}></textarea>
       </label>
+    {:else if app.status?.persona_sample}
+      <p class="dim note">{uiText("У активного персонажа есть готовый образец голоса.")}</p>
     {:else}
       <p class="dim note">{uiText("Запишите 10 секунд своей речи или выберите запись 5–15 секунд чистого голоса без музыки.")}</p>
     {/if}

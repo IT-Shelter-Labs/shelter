@@ -27,7 +27,7 @@ BUILTIN_DIR = os.path.join(ROOT, "personas")
 USER_DIR = os.path.join(ROOT, "data", "personas")
 ACTIVE_PATH = os.path.join(ROOT, "data", "persona.json")
 DEFAULT_ID = "jarvis"
-STARTER_ID = "pippa"
+DESIGNED_VOICE = "personas/anime/voice.wav"
 IMPORTED_PRESETS = {
     "pippa": "download-eb02cdc2e98a1137fe53",
     "akai": "download-32a7610b33558bcf9b45",
@@ -80,6 +80,13 @@ def get(persona_id, _seen=()):
     persona["id"] = persona_id
     persona["builtin"] = _inside(folder, BUILTIN_DIR)
     persona["folder"] = folder
+    voice = persona.get("voice") or {}
+    if persona["builtin"] and voice.get("preset") == "designed":
+        template = _read(os.path.join(BUILTIN_DIR, "anime", "persona.json"))["voice"]
+        persona["voice"] = {
+            **template, **{k: v for k, v in voice.items() if k != "preset"},
+            "reference": DESIGNED_VOICE,
+        }
     styles = persona.get("appearances") or []
     style = next((s for s in styles if s["id"] == persona.get("appearance")), styles[0] if styles else None)
     if style:
@@ -113,7 +120,7 @@ def all_personas():
     installed = {p["id"] for p in result}
     hidden = {preset for preset, original in IMPORTED_PRESETS.items() if original in installed and preset != current}
     result = [p for p in result if p["id"] not in hidden]
-    order = {STARTER_ID: 0, IMPORTED_PRESETS[STARTER_ID]: 0, DEFAULT_ID: 1, "anime": 2}
+    order = {DEFAULT_ID: 0, "pippa": 1, IMPORTED_PRESETS["pippa"]: 1, "anime": 2}
     return sorted(result, key=lambda p: (order.get(p["id"], 3), p.get("name", "")))
 
 
@@ -130,13 +137,6 @@ def resolve(persona, path):
     return os.path.normpath(os.path.join(persona["folder"], path))
 
 
-def starter_id():
-    for candidate in (IMPORTED_PRESETS[STARTER_ID], STARTER_ID):
-        if get(candidate):
-            return candidate
-    return DEFAULT_ID
-
-
 def active_id():
     try:
         value = _read(ACTIVE_PATH).get("active")
@@ -144,7 +144,7 @@ def active_id():
             return value
     except (OSError, ValueError):
         pass
-    return starter_id()
+    return DEFAULT_ID
 
 
 def _save_active(persona_id):
@@ -384,7 +384,7 @@ def _delete(persona_id):
     was_active = active_id() == persona_id
     shutil.rmtree(persona["folder"])
     if was_active:
-        _save_active(starter_id())
+        _save_active(DEFAULT_ID)
 
 
 # ------------------------------------------------------------------ применение
@@ -406,9 +406,9 @@ def apply(config, persona=None):
             if persona.get("system"):
                 _set(config, ("llm", "system"), persona["system"])
             voice = persona.get("voice") or {}
-            if voice.get("reference"):
-                _set(config, ("tts", "clone", "reference"), os.path.relpath(resolve(persona, voice["reference"]), ROOT))
-                _set(config, ("tts", "clone", "reference_text"), voice.get("reference_text", ""))
+            reference = resolve(persona, voice.get("reference"))
+            _set(config, ("tts", "clone", "reference"), os.path.relpath(reference, ROOT) if reference else "")
+            _set(config, ("tts", "clone", "reference_text"), voice.get("reference_text", ""))
             if voice.get("silero"):
                 _set(config, ("tts", "speaker"), voice["silero"])
             if voice.get("piper"):

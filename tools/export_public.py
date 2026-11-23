@@ -1,5 +1,6 @@
 """Create a NEW, reviewable source snapshot; never copy the personal Git history."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -15,7 +16,16 @@ TRANSLATED_DOCS = ("README.md", "GUIDE.md", "CONTRIBUTING.md", "SECURITY.md", "T
 ROOT_FILES = {"README.md","LICENSE","SECURITY.md","CONTRIBUTING.md","THIRD_PARTY.md",".gitignore","config.public.yaml","requirements.txt","requirements-lock.windows.txt","requirements-optional.txt","requirements-tts.txt","app_version.py","main.py","setup_tool.py"}
 DOC_MEDIA = ("shelter-cover-characters.webp", "shelter-desktop.webp", "shelter-personas.webp",
              "shelter-personas-more.webp", "shelter-android.webp")
-PUBLIC_PRESETS = ("pippa", "jarvis", "anime", "akai", "vain", "manju", "tsukuyomi", "cute", "yamaneko", "miku")
+PUBLIC_PRESETS = ("jarvis", "pippa", "anime", "akai", "vain", "manju", "tsukuyomi", "cute", "yamaneko", "miku")
+# Original synthetic VoiceDesign sample documented in docs/HANDOFF-personas.md.
+DESIGNED_SAMPLE_SHA256 = "aae42fd4538a2ed8f90bb71e1324a4dfc6ccbb5f33f276bf779cf8afc709945e"
+JARVIS_SAMPLE_SHA256 = "940c2b3790842ec6f3bcf0c8e4ebeb1672fb7e914e86112d0c4efdaf17e2016e"
+PUBLIC_MODELS = {
+    "anime": "12c2b97e95e700783a6a550dc0eee2d7880aeedccef9ae67bc4c5a2f0f2631a2",
+    "manju": "4e1bf43f1c3bb75b6105ca20f01a9e67a1eb719c2e074dd05885ed7da293e0c5",
+    "tsukuyomi": "cd81161a86671cef6ede99b05498ea6e689a995f987a1bfb0c8ae45acecec5a9",
+    "vain": "cc5ff9f75cee98a9f802f7fdff4da9110a07161aad193949245bc5a2864c643a",
+}
 EXT = {".py",".rs",".toml",".lock",".json",".svelte",".ts",".css",".html",".mjs",".cjs",".sh",".yml",".yaml",".md",".nsh",".xml",".kt",".kts",".properties",".jar",".java",".sc",".bat",".ico",".png",".vrma",".svg",".lua",".mod"}
 
 def selected(root=ROOT):
@@ -62,20 +72,41 @@ def export(destination,root=ROOT):
         if not source.is_file() or source.is_symlink() or source.parent.is_symlink():
             raise ValueError(f"Missing public persona {persona_id}")
         value = json.loads(source.read_text(encoding="utf8"))
-        for field in ("reference", "reference_text", "about"):
-            value.get("voice", {}).pop(field, None)
+        voice = value.get("voice", {})
+        assets = []
+        if persona_id == "anime" and voice.get("reference") == "voice.wav":
+            sample = source.with_name("voice.wav")
+            if sample.is_symlink() or hashlib.sha256(sample.read_bytes()).hexdigest() != DESIGNED_SAMPLE_SHA256:
+                raise ValueError("Unexpected built-in synthetic voice sample")
+            assets.append("voice.wav")
+        else:
+            for field in ("reference", "reference_text", "about"):
+                voice.pop(field, None)
         target = destination / source.relative_to(root)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf8")
         avatar = value.get("avatar", {})
-        assets = ["preview.png"] if avatar.get("preview") == "preview.png" else []
-        if persona_id == "manju":  # Author's BOOTH terms allow redistribution of this exact model.
+        if avatar.get("preview") == "preview.png":
+            assets.append("preview.png")
+        if persona_id in PUBLIC_MODELS:
+            model = source.with_name("appearance.vrm")
+            if model.is_symlink() or hashlib.sha256(model.read_bytes()).hexdigest() != PUBLIC_MODELS[persona_id]:
+                raise ValueError(f"Unexpected public model {persona_id}")
             assets.append("appearance.vrm")
+        if persona_id == "vain":
+            assets.append("LICENSE.txt")
+        if persona_id == "jarvis":
+            sample = source.with_name("voice.wav")
+            if sample.is_symlink() or hashlib.sha256(sample.read_bytes()).hexdigest() != JARVIS_SAMPLE_SHA256:
+                raise ValueError("Unexpected public Jarvis voice sample")
+            assets.extend(("voice.wav", "voice-profile/manifest.json"))
         for name in assets:
-            asset = source.with_name(name)
+            asset = source.parent / name
             if not asset.is_file() or asset.is_symlink():
                 raise ValueError(f"Missing public persona asset {persona_id}/{name}")
-            shutil.copy2(asset, target.with_name(name))
+            output = target.parent / name
+            output.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(asset, output)
     return count
 
 def main():

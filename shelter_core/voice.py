@@ -370,7 +370,7 @@ def _synthesize_raw(text):
     if os.path.exists(path):
         yield wavfile.read(path)
         return
-    if ENGINE == "clone" and (clone_ready() or _wait_for_clone()):
+    if ENGINE == "clone" and not reference.get("skip_clone") and (clone_ready() or _wait_for_clone()):
         parts, sample_rate = [], 0
         try:
             for sample_rate, chunk in _clone_chunks(text, reference):
@@ -570,6 +570,7 @@ ACK_AT = -100.0            # когда отзвучал последний от
 HEARING = threading.Event()  # человек сейчас говорит (для «распознаю…» в окне)
 ACK = threading.Event()     # звучит короткий отклик на обращение («Да, сэр») — микрофон не глушим
 WAKE_ENGINE = "vosk"        # чем слушаем имя: vosk | kws (выставляет listen)
+WAKE_READY = threading.Event()
 # Что Джарвис говорит прямо сейчас: его собственные слова из колонок не должны
 # сработать как «хватит» или «Джарвис» и перебить его же.
 SAYING = []
@@ -1053,6 +1054,7 @@ def listen(cap, config, events, stop):
     # потоковый vosk с полным словарём его ловит — им и ищем имя.
     barge_rec = KaldiRecognizer(model, VOSK_SR) if barge_on and spotter is None else None
     barge_stream = spotter.stream() if barge_on and spotter else None
+    WAKE_READY.set()
 
     def barge_word(x16):
         """Стоп-слово или имя в свежем звуке; None — ничего."""

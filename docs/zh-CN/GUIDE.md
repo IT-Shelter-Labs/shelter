@@ -6,7 +6,7 @@
 
 ## 安装和首次启动
 
-**Windows。** 从 [GitHub Releases](https://github.com/IT-Shelter-Labs/shelter/releases) 下载 x64 安装程序。运行后选择安装目录，按首次启动向导安装语音识别和朗读组件。启用唤醒词前，请先选择并测试麦克风。点击 **Speak** 发出一次请求，点击 **Stop** 中断监听、朗读或正在执行的操作。桌面端默认唤醒词为 `Пиппа`（Pippa）。已有角色选择时沿用原设置。
+**Windows。** 从 [GitHub Releases](https://github.com/IT-Shelter-Labs/shelter/releases) 下载 x64 安装程序。运行后选择安装目录，按首次启动向导安装语音识别和朗读组件。启用唤醒词前，请先选择并测试麦克风。点击 **Speak** 发出一次请求，点击 **Stop** 中断监听、朗读或正在执行的操作。桌面端默认唤醒词为 `Джарвис`（Jarvis）。已有角色选择时沿用原设置。
 
 **Linux。** x86_64 压缩包面向 Ubuntu 24.04 构建。先安装系统依赖，再在解压后的发行包目录中运行命令。
 
@@ -21,7 +21,7 @@ python3 tools/install_linux.py --light-recognition
 ## 语音、角色与工作流
 
 - 在 **Settings → Voice and hearing** 中选择麦克风、识别引擎和语音。桌面端的 GigaAM 和 Vosk 识别俄语。更改界面语言不会改变识别语言。已安装的兼容语音扩展也可以在这里选择。
-- 在 **Character** 中选择预设或编辑副本。要使用 Pippa 的原版外观，请点击 **3D model page**，从作者页面下载并解压 `08_Pippa.zip`。编辑 Pippa，在 **Appearance** 中选择 `.vrm` 文件，保存并选中副本。Manju 的模型随包提供，选中 Yuki 后会下载 pixiv 模型。[Pippa 的来源和使用条款](https://booth.pm/ja/items/4613310) · [素材署名](THIRD_PARTY.md)
+- 在 **Character** 中选择预设。要使用 Pippa 的原版外观，打开 **3D model page** 下载 `08_Pippa.zip`，然后在她的角色卡中点击 **Attach 3D appearance** 并选择该压缩包。要导入旧版角色外观和本地 Jarvis 声音，请点击 **Restore from a previous installation**，再选择原 Shelter 目录。[Pippa 的来源和使用条款](https://booth.pm/ja/items/4613310) · [素材署名](THIRD_PARTY.md)
 - Shelter 支持包含内嵌纹理的人形 VRM 0.x/1.0 模型及 VRMA 动画。在 **Character** 中导入并保留作者署名。虚拟角色窗口的控制方式因平台而异，可以始终显示角色，也可以仅在对话时显示。
 - 在 **Commands → New scenario** 中添加步骤、条件和触发器。设置定时运行前先测试。触发方式包括按钮、语音、时间和事件。一次语音请求最多可以组合六个受支持的步骤。例如 `Открой калькулятор, поставь громкость на тридцать, потом напомни через три минуты выпить воды` 会打开计算器、将音量设为 30%，并创建三分钟后的提醒。执行成功的步骤链可以通过任务卡保存。中途中断时，已完成的操作仍然有效。
 

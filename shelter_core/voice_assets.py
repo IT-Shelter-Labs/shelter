@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 
 BASE = "Qwen/Qwen3-TTS-12Hz-0.6B-Base"
+JARVIS_ADAPTER = Path("models/voices/jarvis/shelter-v4")
+JARVIS_MANIFEST = Path("personas/jarvis/voice-profile/manifest.json")
+JARVIS_DOWNLOAD = ("https://github.com/IT-Shelter-Labs/shelter/releases/download/"
+                   "v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors")
 OFFICIAL = {BASE, "Qwen/Qwen3-TTS-12Hz-1.7B-Base", "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"}
 REQUIRED = ("config.json", "generation_config.json", "model.safetensors", "tokenizer_config.json",
             "vocab.json", "merges.txt", "preprocessor_config.json", "speech_tokenizer/config.json",
@@ -44,15 +48,15 @@ def hub_cache():
     return ROOT_PATH / "models" / "huggingface"
 
 
-def cached(model):
+def cached(model, revision=None):
     if model not in OFFICIAL:
         return None
     for cache in dict.fromkeys((hub_cache(), legacy_hub_cache())):
         repo = cache / ("models--" + model.replace("/", "--"))
         try:
-            revision = (repo / "refs" / "main").read_text(encoding="ascii").strip()
-            if len(revision) == 40 and all(c in "0123456789abcdef" for c in revision):
-                folder = repo / "snapshots" / revision
+            ref = revision or (repo / "refs" / "main").read_text(encoding="ascii").strip()
+            if len(ref) == 40 and all(c in "0123456789abcdef" for c in ref):
+                folder = repo / "snapshots" / ref
                 if not missing(folder):
                     return folder
         except (OSError, UnicodeError):

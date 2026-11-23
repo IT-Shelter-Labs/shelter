@@ -1183,6 +1183,8 @@ def persona_runtime(config):
     full = reference if os.path.isabs(reference) else os.path.join(personas.ROOT, reference)
     clone_ref = ({"reference": os.path.relpath(full, personas.ROOT),
                   "reference_text": clone_cfg.get("reference_text", "")} if reference and os.path.isfile(full) else {})
+    if not clone_ref and not clone_cfg.get("speaker"):
+        clone_ref["skip_clone"] = True
     if clone_cfg.get("jarvis_adapter"):
         clone_ref["model_profile"] = "jarvis" if persona["id"] == personas.DEFAULT_ID else "default"
     voice.set_voice(clone_ref, lambda: voice.configure_cache(config))
@@ -1249,6 +1251,7 @@ def start_services(config, dry_run=False):
     """Голос, модель, умный дом и индекс программ — всё грузится в фоне."""
     from shelter_core import assistant_store as store
     from shelter_core import personas
+    clone_server = copy.deepcopy((config.get("tts") or {}).get("clone") or {})
     persona = personas.apply(config)          # характер, голос и окно активного персонажа
     if persona["id"] != personas.DEFAULT_ID:
         print(f">> PERSONA  //  {persona.get('name')}")
@@ -1299,7 +1302,16 @@ def start_services(config, dry_run=False):
         def when_ready():
             print(">> VOICE CLONE ONLINE")
             threading.Thread(target=prepare_phrases, name="tts-warm-phrases", daemon=True).start()
-        threading.Thread(target=neural.boot, args=(config, voice, when_ready), name="tts-boot", daemon=True).start()
+        # A separate warm-up reference lets the server serve the next character
+        # even if the current one has no configured sample.
+        if not clone_server.get("speaker") and not os.path.isfile(os.path.join(
+                personas.ROOT, clone_server.get("reference") or "")):
+            designed = (personas.get("anime") or {}).get("voice") or {}
+            sample = os.path.join(personas.ROOT, personas.DESIGNED_VOICE)
+            if os.path.isfile(sample):
+                clone_server.update(reference=sample, reference_text=designed.get("reference_text", ""))
+        boot_config = {**config, "tts": {**tts_cfg, "clone": clone_server}}
+        threading.Thread(target=neural.boot, args=(boot_config, voice, when_ready), name="tts-boot", daemon=True).start()
     else:
         prepare_phrases()
 
@@ -1385,6 +1397,9 @@ def core_status(config, cap):
     from shelter_core import asr
     from shelter_core import control as control_module
     from shelter_core import llm_connections
+    voice_status = neural.status() if voice.ENGINE == "clone" else None
+    if voice_status and voice.CLONE_REF.get("skip_clone"):
+        voice_status = {"phase": "error", "reason": "reference"}
     llm_cfg = llm_connections.resolve(config.get("llm") or {})
     try:
         mic = sd.query_devices(cap.stream.device, "input")["name"]
@@ -1396,10 +1411,12 @@ def core_status(config, cap):
         "speaking": voice.SPEAKING.is_set(),
         "thinking": THINKING.is_set(),
         "voice": voice.ENGINE,
-        "clone_ready": neural.status()["phase"] == "ready" if voice.ENGINE == "clone" else None,
-        "voice_status": neural.status() if voice.ENGINE == "clone" else None,
+        "clone_ready": voice_status["phase"] == "ready" if voice_status else None,
+        "voice_status": voice_status,
+        "persona_sample": bool(voice.CLONE_REF.get("reference")),
         "asr": "gigaam" if asr._recognizer is not None else "vosk",
         "wake_engine": voice.WAKE_ENGINE,
+        "wake_ready": voice.WAKE_READY.is_set(),
         "persona": {k: (config.get("persona") or {}).get(k) for k in ("id", "name", "title", "address", "gender")},
         # Подавление эха: откуда берём звук колонок и идёт ли он (render — кадры 10 мс).
         "echo": ({"speaker": cap.echo.speaker, "error": cap.echo.error, "frames": cap.echo.render_frames}
@@ -1447,10 +1464,16 @@ def run(config, dry_run):
     threads = []
 
     def listen_repaired(cap, config, events, stop):
-        from shelter_core import startup_assets
-        startup_assets.listen(voice.listen, cap, config, events, stop,
-                              lambda phase: WORKERS.update(vosk={"state": phase, "error": ""}))
-    workers = [(listen_repaired if not dry_run else voice.listen, "vosk"), (watch_capture, "microphone")]
+        try:
+            if dry_run:
+                voice.listen(cap, config, events, stop)
+            else:
+                from shelter_core import startup_assets
+                startup_assets.listen(voice.listen, cap, config, events, stop,
+                                      lambda phase: WORKERS.update(vosk={"state": phase, "error": ""}))
+        finally:
+            voice.WAKE_READY.clear()
+    workers = [(listen_repaired, "vosk"), (watch_capture, "microphone")]
     detector_cfg = config.get("detector") or {}
     if detector_cfg.get("enabled", False):
         try:

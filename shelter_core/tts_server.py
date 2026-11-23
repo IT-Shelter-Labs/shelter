@@ -49,20 +49,20 @@ def watch_parent(pid):
         time.sleep(2.0)
 
 
-def resolve(model_id, *, allow_download=True):
+def resolve(model_id, *, allow_download=True, revision=None):
     """Локальная копия модели, если она уже скачана: старт не зависит от сети."""
     from shelter_core import voice_assets
     if os.path.isdir(model_id):
         if voice_assets.missing(model_id):
             raise RuntimeError("В выбранной локальной модели отсутствуют файлы")
         return model_id
-    existing = voice_assets.cached(model_id)
+    existing = voice_assets.cached(model_id, revision)
     if existing is not None:
         return str(existing)
     cache = voice_assets.hub_cache()
     from huggingface_hub import snapshot_download
     try:
-        path = snapshot_download(model_id, local_files_only=True, cache_dir=cache)
+        path = snapshot_download(model_id, local_files_only=True, cache_dir=cache, revision=revision)
     except Exception as error:
         path = getattr(error, "snapshot_path", "") or ""
     if path and not voice_assets.missing(path):
@@ -75,8 +75,9 @@ def resolve(model_id, *, allow_download=True):
     from huggingface_hub import hf_hub_download
     for file in files:
         hf_hub_download(model_id, file, force_download=bool(path and os.path.exists(os.path.join(path, file))),
-                        token=False, endpoint="https://huggingface.co", cache_dir=cache)
-    path = snapshot_download(model_id, local_files_only=True, cache_dir=cache, allow_patterns=list(voice_assets.REQUIRED))
+                        token=False, endpoint="https://huggingface.co", cache_dir=cache, revision=revision)
+    path = snapshot_download(model_id, local_files_only=True, cache_dir=cache, revision=revision,
+                             allow_patterns=list(voice_assets.REQUIRED))
     if voice_assets.missing(path):
         raise RuntimeError("Не все файлы модели удалось восстановить")
     STATE["phase"] = "loading"
@@ -160,15 +161,22 @@ def load():
             MODEL = Qwen3TTSModel.from_pretrained(resolve(ARGS.model, allow_download=not ARGS.no_download), device_map="cuda:0", dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16)
         else:
             from faster_qwen3_tts import FasterQwen3TTS
-            base = resolve(ARGS.model, allow_download=not ARGS.no_download)
+            from shelter_core import tts_profiles
+            adapter = ARGS.jarvis_adapter and all(
+                present(os.path.join(ARGS.jarvis_adapter, name)) for name in ("manifest.json", "adapter.safetensors")
+            )
+            revision = None
+            if adapter:
+                manifest = tts_profiles.manifest(ARGS.jarvis_adapter)
+                if manifest.get("base_model") == ARGS.model:
+                    revision = manifest.get("base_revision")
+            base = resolve(ARGS.model, allow_download=not ARGS.no_download, revision=revision)
             MODEL = FasterQwen3TTS.from_pretrained(base)
-            if ARGS.jarvis_adapter:
-                from shelter_core.tts_profiles import ModelProfiles
-                if all(present(os.path.join(ARGS.jarvis_adapter, name)) for name in ("manifest.json", "adapter.safetensors")):
-                    PROFILES = ModelProfiles(MODEL.model.model, base, ARGS.jarvis_adapter)
-                    STATE["jarvis_revision"] = PROFILES.revision
-                else:
-                    STATE["warning"] = "missing_adapter"
+            if adapter:
+                PROFILES = tts_profiles.ModelProfiles(MODEL.model.model, base, ARGS.jarvis_adapter)
+                STATE["jarvis_revision"] = PROFILES.revision
+            elif ARGS.jarvis_adapter:
+                STATE["warning"] = "missing_adapter"
         # Первая генерация захватывает CUDA-графы и разбирает образец голоса.
         # Без прогрева эти секунды достались бы первой реплике.
         for _ in stream("Системы готовы, сэр."):

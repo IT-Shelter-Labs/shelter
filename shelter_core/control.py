@@ -201,6 +201,25 @@ class ControlServer:
                     except Exception as error:
                         self._send(400, {"error": str(error)})
                     return
+                if self.path in ("/api/persona/attach", "/api/persona/restore"):
+                    from shelter_core import import_avatars, persona_migration, personas
+                    from shelter_core import main as core_main
+                    try:
+                        path = str(data.get("path") or "")
+                        if self.path.endswith("/attach"):
+                            model = import_avatars.attach_builtin(str(data.get("id") or ""), path)
+                            core_main.switch_persona(owner.config, model["id"])
+                            result = {"active": model["id"]}
+                        else:
+                            result = persona_migration.restore(path, data.get("include_voice") is True)
+                            active = personas.active()["id"]
+                            replacement = result["restored"].get(active)
+                            if replacement and personas.active().get("avatar", {}).get("type") == "hud":
+                                core_main.switch_persona(owner.config, replacement)
+                        self._send(200, result)
+                    except (OSError, ValueError, TypeError, KeyError) as error:
+                        self._send(400, {"error": str(error)})
+                    return
                 if self.path == "/api/textops":
                     from shelter_core import textops
                     op = str(data.get("op") or "state")

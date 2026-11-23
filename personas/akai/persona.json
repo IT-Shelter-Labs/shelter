@@ -15,10 +15,13 @@
   "wake_reply": "Слушаю.",
   "switch_reply": "Теперь я Акай!",
   "voice": {
+    "preset": "designed",
     "silero": "xenia",
     "piper": "irina"
   },
   "avatar": {
-    "type": "hud"
+    "type": "hud",
+    "source": "https://booth.pm/ja/items/3752943",
+    "credit": "Akai © Shugan."
   }
 }

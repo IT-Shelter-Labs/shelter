@@ -15,7 +15,7 @@
   import CompanionEditor from "../components/CompanionEditor.svelte";
   import AvatarPortrait from "../components/AvatarPortrait.svelte";
   import Reactor from "../components/Reactor.svelte";
-  import { app, get, set, setGuard, toast, toastError } from "../lib/store.svelte";
+  import { app, get, set, saveNow, setGuard, toast, toastError } from "../lib/store.svelte";
   import { leaveDraft } from "../lib/navigation";
   import { api, on, type Persona } from "../lib/api";
 
@@ -91,6 +91,47 @@
       await api.persona(p.id);
       active = p.id;
       toast(`Теперь ${p.name}`, "success");
+    } catch (e) {
+      toastError(e);
+    } finally {
+      busy = "";
+    }
+  }
+
+  async function attachLook(p: Persona) {
+    const path = await openFile({ title: "Выберите скачанный облик", multiple: false,
+      filters: [{ name: "3D-модель или архив автора", extensions: ["vrm", "zip"] }] });
+    if (typeof path !== "string") return;
+    busy = "attach";
+    try {
+      await invoke("core_post", { path: "/api/persona/attach", body: { id: p.id, path } });
+      await refresh();
+      toast("3D-облик подключён", "success");
+    } catch (e) {
+      toastError(e);
+    } finally {
+      busy = "";
+    }
+  }
+
+  async function restoreLocal() {
+    const path = await openFile({ title: "Папка прежней установки Shelter", directory: true, multiple: false });
+    if (typeof path !== "string") return;
+    const includeVoice = !get("tts.clone.reference") || get("tts.clone.reference") === app.defaults.tts?.clone?.reference;
+    busy = "restore";
+    try {
+      const result = await invoke<{ restored: Record<string, string>; clone: Record<string, string> }>("core_post", {
+        path: "/api/persona/restore", body: { path, include_voice: includeVoice },
+      });
+      await refresh();
+      if (result.clone.reference) {
+        for (const [key, value] of Object.entries(result.clone)) set(`tts.clone.${key}`, value, false);
+        set("tts.engine", "clone", false);
+        await saveNow();
+        await api.coreRestart();
+      }
+      toast(Object.keys(result.restored).length || result.clone.reference
+        ? "Облики и доступные голоса перенесены" : "Все найденные облики уже подключены", "success");
     } catch (e) {
       toastError(e);
     } finally {
@@ -267,7 +308,7 @@
         {#if p.id === "jarvis"}<div class="reactor-portrait" role="img" aria-label={uiText("Реактор " + String(p.name))}><Reactor size={150} animated={false} /></div>
         {:else}<AvatarPortrait path={p.avatar?.preview} name={p.builtin ? uiText(p.name) : p.name} />{/if}
         <div class="head">
-          <span class="badge">{uiText(p.avatar?.type === "vrm" ? "3D" : "HUD")}</span>
+          <span class="badge">{uiText(p.avatar?.type === "vrm" ? "3D" : p.builtin && p.id !== "jarvis" ? "Облик отдельно" : "HUD")}</span>
           <h3>{p.builtin ? uiText(p.name) : p.name}</h3>
           {#if p.id === active}<span class="chip ok"><Check size={12} />{uiText(" сейчас")}</span>{/if}
         </div>
@@ -290,12 +331,18 @@
             {uiText("Страница 3D-модели")}
           </button>
         {/if}
+        {#if p.builtin && p.id !== "jarvis" && p.avatar?.type === "hud"}
+          <button type="button" class="btn source" disabled={busy !== ""} onclick={() => attachLook(p)}>
+            <Box size={14} /> {uiText("Подключить 3D-облик")}
+          </button>
+        {/if}
         {#if p.voice?.status}<p class="voice-status"><CircleAlert size={13} /> {uiText(p.voice.status)}</p>{/if}
       </div>
     {/each}
     <div class="add-col">
       <button class="card persona add" disabled={busy !== ""} onclick={create}>{uiText("+ Свой персонаж")}</button>
       <button class="btn" disabled={busy !== ""} onclick={importPersona}><Upload size={14} /> {uiText(busy === "import" ? "Проверяю пакет…" : "Импорт из пакета")}</button>
+      <button class="btn" disabled={busy !== ""} onclick={restoreLocal}><Upload size={14} /> {uiText(busy === "restore" ? "Переношу облики и голоса…" : "Перенести из прежней установки")}</button>
     </div>
   </div>
 

@@ -19,9 +19,11 @@ export type CoreStatus = {
   thinking: boolean;
   voice: string;
   clone_ready: boolean | null;
+  persona_sample?: boolean;
   voice_status?: { phase: string; reason: string } | null;
   asr: string;
   wake_engine?: string;
+  wake_ready?: boolean;
   persona?: { id?: string; name?: string; title?: string; address?: string; gender?: "m" | "f" };
   echo?: { speaker: string | null; error: string | null; frames: number } | null;
   llm: { enabled: boolean; model: string; provider: string };

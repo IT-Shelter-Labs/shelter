@@ -4,7 +4,7 @@
 
 ## Install and start
 
-**Windows.** Download the x64 installer from [GitHub Releases](https://github.com/IT-Shelter-Labs/shelter/releases). Run it, choose an installation folder, and follow the first-run wizard to install speech recognition and a voice. Select the microphone and test it before enabling wake-word detection. Use **Speak** for a single request and **Stop** to interrupt listening, playback, or work. The default desktop wake word is `Пиппа` (Pippa). A saved character selection takes precedence.
+**Windows.** Download the x64 installer from [GitHub Releases](https://github.com/IT-Shelter-Labs/shelter/releases). Run it, choose an installation folder, and follow the first-run wizard to install speech recognition and a voice. Select the microphone and test it before enabling wake-word detection. Use **Speak** for a single request and **Stop** to interrupt listening, playback, or work. The default desktop wake word is `Джарвис` (Jarvis). A saved character selection takes precedence.
 
 **Linux.** The x86_64 archive is built for Ubuntu 24.04. Install the system packages, then open a terminal in the extracted release folder.
 
@@ -19,7 +19,7 @@ python3 tools/install_linux.py --light-recognition
 ## Voice, characters, and workflows
 
 - Open **Settings → Voice and hearing** to choose a microphone, recognizer, and voice. GigaAM and Vosk recognize Russian on desktop. Changing the UI language leaves the recognition language unchanged. An installed compatible speech extension can be selected here.
-- Open **Character** to select a preset or edit a copy. To attach Pippa’s original appearance, open **3D model page**, download `08_Pippa.zip` from the creator, and extract it. Edit Pippa, open **Appearance**, select the extracted `.vrm`, save the copy, and select it. Manju’s model is included. Selecting Yuki downloads her pixiv model. [Pippa’s source and terms](https://booth.pm/ja/items/4613310) · [Asset credits](../THIRD_PARTY.md)
+- Open **Character** to select a preset or edit a copy. To install Pippa’s original appearance, open **3D model page**, download `08_Pippa.zip`, then use **Attach 3D appearance** on her card and select the archive. Use **Restore from a previous installation** to import existing character assets and the local Jarvis voice from a previous Shelter folder. [Pippa’s source and terms](https://booth.pm/ja/items/4613310) · [Asset credits](../THIRD_PARTY.md)
 - Shelter accepts self-contained humanoid VRM 0.x/1.0 models and VRMA animations. Use **Character** to import them and preserve the creator’s credit. The avatar menu and window controls depend on your platform. You can show the character continuously or only during a conversation.
 - Open **Commands → New scenario** to add steps, conditions, and triggers. Test it before scheduling it. Supported triggers include a button, voice, time, and events. A one-off voice request can combine up to six supported steps. For example, `Открой калькулятор, поставь громкость на тридцать, потом напомни через три минуты выпить воды` opens Calculator, sets volume to 30%, and adds a reminder. A successful chain can be saved as a scenario from the task card. If a chain is interrupted, completed steps remain in effect.
 

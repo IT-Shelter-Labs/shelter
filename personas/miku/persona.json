@@ -14,10 +14,13 @@
   "wake_reply": "Слушаю.",
   "switch_reply": "Теперь я Мику!",
   "voice": {
+    "preset": "designed",
     "silero": "xenia",
     "piper": "irina"
   },
   "avatar": {
-    "type": "hud"
+    "type": "hud",
+    "source": "https://booth.pm/en/items/6290737",
+    "credit": "MW Miku © Misfitworks. Проверьте условия автора перед использованием."
   }
 }

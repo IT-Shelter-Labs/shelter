@@ -16,11 +16,13 @@
   "wake_reply": "Слушаю.",
   "switch_reply": "Теперь я Цукуёми!",
   "voice": {
+    "preset": "designed",
     "silero": "xenia",
     "piper": "irina"
   },
   "avatar": {
-    "type": "hud",
+    "type": "vrm",
+    "model": "appearance.vrm",
     "source": "https://tyc.rei-yumesaki.net/material/avatar/3d-a/",
     "credit": "Официальная 3D-модель Tsukuyomi-chan, тип A © Rei Yumesaki. Реплики Shelter не являются официальными репликами персонажа.",
     "preview": "preview.png"

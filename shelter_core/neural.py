@@ -105,6 +105,19 @@ def boot(config, voice, on_ready):
                 return
         if _stop.is_set():
             return
+        adapter = cfg.get("jarvis_adapter") or ""
+        if (adapter and os.path.normcase(os.path.abspath(os.path.join(ROOT, adapter)))
+                == os.path.normcase(os.path.abspath(os.path.join(ROOT, voice_assets.JARVIS_ADAPTER)))
+                and not voice_assets.present(os.path.join(ROOT, adapter, "adapter.safetensors"))
+                and cfg.get("auto_repair", True) is not False and config.get("repair_components", True) is not False):
+            _set("downloading")
+            try:
+                from shelter_core import setup_tool
+                setup_tool.install("jarvis-voice")
+            except (OSError, ValueError, RuntimeError) as error:
+                print(f">> JARVIS VOICE DOWNLOAD // {error}", flush=True)
+        if _stop.is_set():
+            return
         _set("loading")
         voice.CLONE_URL = start(config)
         if not voice.CLONE_URL:

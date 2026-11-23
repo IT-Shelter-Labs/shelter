@@ -32,19 +32,29 @@ class PublicExport(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaises(ValueError):module.export(Path(folder))
 
-    def test_public_catalog_defaults_to_pippa_and_keeps_saved_selection(self):
+    def test_public_catalog_defaults_to_jarvis_and_keeps_saved_selection(self):
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / "snapshot"
             module.export(target)
             state = target / "data/persona.json"
-            with patch.object(personas, "BUILTIN_DIR", str(target / "personas")), \
+            with patch.object(personas, "ROOT", str(target)), \
+                    patch.object(personas, "BUILTIN_DIR", str(target / "personas")), \
                     patch.object(personas, "USER_DIR", str(target / "data/personas")), \
                     patch.object(personas, "ACTIVE_PATH", str(state)):
-                self.assertEqual(personas.active_id(), "pippa")
-                self.assertEqual({p["id"] for p in personas.all_personas()}, set(module.PUBLIC_PRESETS))
-                self.assertEqual(personas.call_words(personas.get("pippa"), {}), ["пиппа", "пипа"])
-                personas._save_active("jarvis")
                 self.assertEqual(personas.active_id(), "jarvis")
-            self.assertEqual(list((target / "personas").rglob("*.vrm")), [target / "personas/manju/appearance.vrm"])
+                catalog = [p["id"] for p in personas.all_personas()]
+                self.assertEqual(catalog[:3], ["jarvis", "pippa", "anime"])
+                self.assertEqual(set(catalog), set(module.PUBLIC_PRESETS))
+                self.assertEqual(personas.call_words(personas.get("pippa"), {}), ["пиппа", "пипа"])
+                self.assertEqual(Path(personas.public(personas.get("pippa"))["voice"]["reference"]),
+                                 target / "personas/anime/voice.wav")
+                personas._save_active("pippa")
+                self.assertEqual(personas.active_id(), "pippa")
+                self.assertEqual(personas.all_personas()[0]["id"], "jarvis")
+            self.assertEqual(set((target / "personas").rglob("*.vrm")),
+                             {target / "personas" / persona_id / "appearance.vrm" for persona_id in module.PUBLIC_MODELS})
+            self.assertTrue((target / "personas/jarvis/voice.wav").is_file())
+            self.assertFalse(any((target / "personas").rglob("*.safetensors")))
             for preset in (target / "personas").glob("*/persona.json"):
-                self.assertNotIn("reference", json.loads(preset.read_text(encoding="utf8")).get("voice", {}))
+                voice = json.loads(preset.read_text(encoding="utf8")).get("voice", {})
+                self.assertEqual(voice.get("reference"), "voice.wav" if preset.parent.name == "anime" else None)

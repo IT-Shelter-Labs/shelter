@@ -26,6 +26,9 @@
   let devices = $state<{ index: number; name: string; default: boolean }[]>([]);
   let heardWake = $state(false);
   let micStepStarted = 0;
+  const wakeWord = $derived(app.status?.wake_word?.trim());
+  const wakePrompt = $derived(wakeWord ? wakeWord[0].toLocaleUpperCase() + wakeWord.slice(1) : "");
+  const wakeWorker = $derived(app.status?.workers?.vosk);
   let restarting = $state(false);
   let autostart = $state(true);
   let preciseRecognition = $state(true);
@@ -113,6 +116,8 @@
   }
 
   async function startMicStep() {
+    micStepStarted = Date.now() / 1000;
+    heardWake = false;
     restarting = true;
     try {
       if (!app.core?.running) await api.coreStart();
@@ -122,21 +127,19 @@
       toastError(e);
     }
     restarting = false;
-    micStepStarted = Date.now() / 1000;
-    heardWake = false;
   }
 
   async function restartCore(resetWake = false) {
     restarting = true;
+    if (resetWake) {
+      micStepStarted = Date.now() / 1000;
+      heardWake = false;
+    }
     try {
       await saveNow();
       await api.coreRestart();
       await new Promise((r) => setTimeout(r, 1500));
       await waitConnected();
-      if (resetWake) {
-        micStepStarted = Date.now() / 1000;
-        heardWake = false;
-      }
     } catch (e) {
       toastError(e);
     } finally {
@@ -293,7 +296,13 @@
           </div>
         {:else if step === 3}
           <h2>{uiText("Микрофон")}</h2>
-          <p class="muted">{uiText("Выберите микрофон и скажите обычным голосом: ")}<b class="accent">{uiText("«Джарвис»")}</b>.</p>
+          <p class="muted">
+            {#if wakePrompt}
+              {uiText("Выберите микрофон и произнесите")} <b class="accent" data-i18n="off">«{wakePrompt}»</b>.
+            {:else}
+              {uiText("Выберите микрофон. Фраза вызова появится после подключения.")}
+            {/if}
+          </p>
           <div class="card">
             <select style="width:100%" disabled={restarting} value={String(get("audio.device") ?? "")} onchange={async (e) => { const v = (e.target as HTMLSelectElement).value; set("audio.device", v === "" ? null : Number(v), false); set("audio.device_name", devices.find(d => String(d.index) === v)?.name ?? null, false); await restartCore(true); }}>
               <option value="">{uiText("По умолчанию Windows")}</option>
@@ -301,8 +310,18 @@
               {#if get("audio.device") != null && !devices.some((d) => d.index === get("audio.device"))}<option value={String(get("audio.device"))}>{uiText("Текущий микрофон (№")}{uiText(get("audio.device"))})</option>{/if}
             </select>
             <div class="meter"><MicMeter /></div>
-            <div class="wake {heardWake ? 'heard' : ''}">
-              {#if restarting}<LoaderCircle class="spin" size={18} />{uiText(" Подключаю микрофон…\r\n              ")}{:else if heardWake}<Check size={18} />{uiText(" Слышу вас отлично, сэр.\r\n              ")}{:else}<span class="pulse"></span>{uiText(" Жду «Джарвис»…")}{/if}
+            <div class="wake {heardWake ? 'heard' : ''}" role="status">
+              {#if restarting || !wakePrompt}
+                <LoaderCircle class="spin" size={18} />{uiText("Подключаю микрофон…")}
+              {:else if heardWake}
+                <Check size={18} />{uiText("Фраза вызова распознана")}
+              {:else if wakeWorker?.state === "error" || wakeWorker?.state === "failed"}
+                <CircleAlert size={18} />{uiText("Распознавание не запустилось.")} {wakeWorker.error}
+              {:else if !(app.status?.wake_ready ?? wakeWorker?.state === "running")}
+                <LoaderCircle class="spin" size={18} />{uiText("Готовлю распознавание речи…")}
+              {:else}
+                <span class="pulse"></span>{uiText("Жду фразу вызова")} <span data-i18n="off">«{wakePrompt}»</span>
+              {/if}
             </div>
           </div>
           <p class="dim hint">{uiText("Не срабатывает? Говорите ближе к микрофону, проверьте, что полоска прыгает, когда вы говорите, или выберите другой микрофон.")}</p>
@@ -323,7 +342,10 @@
           <div class="center">
             <Reactor size={200} state="speaking" />
             <h1>{uiText("Готово, сэр.")}</h1>
-            <p class="muted">{uiText("Скажите ")}<b class="accent">{uiText("«Джарвис»")}</b>{uiText(" — и просите что угодно: «открой браузер», «какая погода завтра», «таймер на пять минут»,\r\n              «выключи микрофон в дискорде», «что ты умеешь?». Окно можно закрыть — Джарвис останется в трее у часов.")}</p>
+            <p class="muted">
+              {#if wakePrompt}{uiText("Скажите")} <b class="accent" data-i18n="off">«{wakePrompt}»</b>.{/if}
+              {uiText("Попробуйте попросить открыть браузер, узнать погоду или поставить таймер. После закрытия окна Shelter останется в трее.")}
+            </p>
             <div class="nav">{@render backButton()}<button class="btn primary lg" disabled={navigationDisabled} onclick={finish}>{uiText("Начать работу")}</button></div>
           </div>
         {/if}
@@ -333,7 +355,7 @@
     {#if voiceVisited}
       <div class="panel fade-in" hidden={step !== 4}>
         <h2>{uiText("Голос")}</h2>
-        <p class="muted">{uiText("Как будет звучать Джарвис. Выберите и нажмите «Прослушать».")}</p>
+        <p class="muted">{uiText("Выберите голос и нажмите «Прослушать».")}</p>
         {#if hw?.recommendation.voice === "clone" || check.clone?.ok}
           <div class="card">
             <div class="caps">{uiText("Фирменный голос — ваша видеокарта его потянет")}</div>

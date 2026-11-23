@@ -15,11 +15,14 @@
   "wake_reply": "Слушаю.",
   "switch_reply": "Теперь я Вейн!",
   "voice": {
-    "silero": "aidar",
+    "silero": "eugene",
+    "effect": "robot",
     "piper": "dmitri"
   },
   "avatar": {
-    "type": "hud",
+    "type": "vrm",
+    "model": "appearance.vrm",
+    "preview": "preview.png",
     "source": "https://booth.pm/ja/items/4415725",
     "credit": "MP-Vain © ヨドバシラムダ."
   }

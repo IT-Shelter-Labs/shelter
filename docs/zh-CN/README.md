@@ -33,13 +33,13 @@ Shelter 是一款适用于 Windows、Linux 和 Android 的开源语音助手。�
 
 ![Shelter 桌面主页，包含语音输入、工作流和提醒](../media/shelter-desktop.webp)
 
-桌面端有十个角色预设。首次启动默认选中 **Pippa**。其他角色包括 Jarvis、Yuki、Akai、Vain、Manju、Tsukuyomi、Cute、Yamaneko 和 Miku。角色预设会更换唤醒词、声音和性格，更新后保留你的选择。
+桌面端有十个角色预设。首次启动默认选中 **Jarvis**。其他角色包括 Pippa、Yuki、Akai、Vain、Manju、Tsukuyomi、Cute、Yamaneko 和 Miku。角色预设会更换唤醒词、声音和性格，更新后保留你的选择。
 
-![Shelter 角色目录，已选中 Pippa](../media/shelter-personas.webp)
+![Shelter 角色目录，Jarvis、Pippa 和 Yuki 排在最前](../media/shelter-personas.webp)
 
-![角色目录中的 Manju、Miku、Tsukuyomi 和 Yamaneko](../media/shelter-personas-more.webp)
+![其他角色卡片及头像预览](../media/shelter-personas-more.webp)
 
-安装包包含 Manju 的 3D 模型。选中 Yuki 时，Shelter 会下载 pixiv 的模型。Pippa 自带头像和作者 VRM 下载页面的链接。[角色设置](GUIDE.md) · [素材署名](THIRD_PARTY.md)
+Shelter 自带 Yuki、Vain、Manju 和 Tsukuyomi 的 3D 外观。Pippa 的原版外观可从作者处下载，再通过角色卡导入。使用兼容的 NVIDIA 显卡时，角色语音设置会下载训练好的 Jarvis v4 配置，并为 Yuki 和 Pippa 使用内置声音样本。[角色设置](GUIDE.md) · [素材署名](THIRD_PARTY.md)
 
 ## 从源码构建
 

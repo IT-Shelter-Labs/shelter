@@ -120,6 +120,73 @@ def _open(path, member=""):
             yield stream
 
 
+def _thumbnail(model, target):
+    with model.open("rb") as stream:
+        doc = _document(stream)
+        bin_start = stream.tell() + 8
+        extensions = doc["extensions"]
+        if "VRMC_vrm" in extensions:
+            index = extensions["VRMC_vrm"].get("meta", {}).get("thumbnailImage")
+        else:
+            texture = extensions["VRM"].get("meta", {}).get("texture")
+            index = doc["textures"][texture].get("source") if isinstance(texture, int) and texture >= 0 else None
+        if not isinstance(index, int) or index < 0:
+            return
+        image = doc["images"][index]
+        if image.get("mimeType") != "image/png" or "bufferView" not in image:
+            return
+        view = doc["bufferViews"][image["bufferView"]]
+        size = view["byteLength"]
+        offset = view.get("byteOffset", 0)
+        if view["buffer"] == 0 and 0 <= offset and 0 < size <= 4 * 1024**2:
+            stream.seek(bin_start + offset)
+            data = stream.read(size)
+            if len(data) == size and data.startswith(b"\x89PNG\r\n\x1a\n"):
+                target.write_bytes(data)
+
+
+def attach_builtin(persona_id, filename):
+    """Keep the preset's identity and voice while installing an author's VRM."""
+    if persona_id not in personas.IMPORTED_PRESETS:
+        raise ValueError("Выберите встроенного персонажа с отдельной 3D-моделью")
+    preset = personas.get(persona_id)
+    if not preset or not preset["builtin"]:
+        raise ValueError("Встроенный персонаж не найден")
+    source = Path(filename)
+    if source.suffix.lower() not in (".vrm", ".zip") or not source.is_file():
+        raise ValueError("Выберите скачанный файл VRM или ZIP")
+    entries = [(member, size) for member, size in _entries(source)
+               if 0 < size <= LIMIT and (not member or member.lower().endswith(".vrm"))]
+    if len(entries) > 1 and persona_id == "pippa":
+        entries = [(member, size) for member, size in entries if Path(member).name.lower() == "08_pippa.vrm"]
+    if len(entries) != 1:
+        raise ValueError("Распакуйте архив и выберите нужный файл VRM")
+    member, size = entries[0]
+    with tempfile.TemporaryDirectory(prefix="shelter-avatar-") as work, _open(source, member) as stream:
+        model = Path(work) / "appearance.vrm"
+        with model.open("wb") as file:
+            shutil.copyfileobj(stream, file, length=1024**2)
+        with model.open("rb") as file:
+            inspect_vrm(file, size)
+        profile = personas.public(preset)
+        profile["id"] = personas.IMPORTED_PRESETS[persona_id]
+        avatar = profile["avatar"]
+        avatar.update(type="vrm", model=str(model))
+        with model.open("rb") as file:
+            original = hashlib.file_digest(file, "sha256").hexdigest().startswith(profile["id"][9:])
+        if not original or not avatar.get("preview"):
+            avatar.pop("preview", None)
+            portrait = Path(work) / "preview.png"
+            try:
+                _thumbnail(model, portrait)
+            except (KeyError, TypeError, IndexError, ValueError):
+                pass  # Thumbnail metadata is optional.
+            if portrait.is_file():
+                avatar["preview"] = str(portrait)
+        with personas._storage_lock:
+            return personas.get(profile["id"]) or personas.save(profile)
+
+
 def scan(folder):
     result = []
     for path in sorted(Path(folder).iterdir()):

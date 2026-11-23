@@ -3,7 +3,8 @@ pub const POST: &[&str] = &[
     "/api/ask", "/api/say", "/api/assistant", "/api/listen", "/api/cancel",
     "/api/voice/record", "/api/voice/import", "/api/speaker/enroll", "/api/speaker/test",
     "/api/speaker/forget", "/api/speaker/status", "/api/persona", "/api/persona/save",
-    "/api/persona/delete", "/api/persona/export", "/api/persona/import", "/api/avatar/motion",
+    "/api/persona/delete", "/api/persona/export", "/api/persona/import", "/api/persona/attach",
+    "/api/persona/restore", "/api/avatar/motion",
     "/api/avatar/options", "/api/avatar/finished", "/api/avatar/seated", "/api/avatar/resize",
     "/api/scenarios", "/api/settings/reload", "/api/schedule/cancel", "/api/audio/test",
     "/api/companion", "/api/textops", "/api/plugins", "/api/connections/test", "/api/media", "/api/minecraft",
@@ -13,7 +14,9 @@ pub const POST: &[&str] = &[
 pub fn post_allowed(path: &str) -> bool { POST.contains(&path) }
 pub fn long_request(path: &str) -> bool {
     path.starts_with("/api/voice/") || path.starts_with("/api/speaker/") || matches!(path,
-        "/api/audio/test" | "/api/plugins" | "/api/connections/test" | "/api/persona/export" | "/api/persona/import" | "/api/textops" | "/api/scenarios" | "/api/image/generate")
+        "/api/audio/test" | "/api/plugins" | "/api/connections/test" | "/api/persona/export" |
+        "/api/persona/import" | "/api/persona/attach" | "/api/persona/restore" |
+        "/api/textops" | "/api/scenarios" | "/api/image/generate")
 }
 
 #[cfg(test)]
