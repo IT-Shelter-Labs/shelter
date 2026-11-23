@@ -27,6 +27,7 @@
     "preview": "preview.png",
     "source": "https://booth.pm/ko/items/6405885",
     "credit": "MeowManju © MinaraiNyanko. Условия автора разрешают распространение и исключают использование в политических целях.",
-    "framing": "full"
+    "framing": "full",
+    "motion": 0.5
   }
 }

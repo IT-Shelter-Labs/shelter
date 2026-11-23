@@ -4,9 +4,18 @@
 
 ![Обложка Shelter с главным окном, Пиппой, Юки, Джарвисом и Мандзю](../media/shelter-cover-characters.webp)
 
+<p align="center">
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="Скачать Windows 10/11 x64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="Скачать Linux x86_64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Скачать Android Companion APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="Скачать Android Local APK"></a>
+</p>
+
+[Архив игровых модов](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Веса голоса Джарвиса v4](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [Все выпуски](https://github.com/IT-Shelter-Labs/shelter/releases)
+
 Голосовой ассистент с открытым исходным кодом для Windows, Linux и Android. Открывайте приложения, управляйте музыкой, ставьте напоминания, запускайте сценарии и разговаривайте с выбранной моделью. На ПК можно произнести по-русски имя выбранного персонажа или нажать «Говорить».
 
-[Скачать](https://github.com/IT-Shelter-Labs/shelter/releases) · [Руководство](GUIDE.md) · [Персонажи](#персонажи) · [Telegram IT Shelter](https://t.me/+tqB8b6h4JbYwZWVi) · [Поддержать проект](https://t.me/itshelter_bot?start=donate)
+[Руководство](GUIDE.md) · [Персонажи](#персонажи) · [Telegram IT Shelter](https://t.me/+tqB8b6h4JbYwZWVi) · [Поддержать проект](https://t.me/itshelter_bot?start=donate)
 
 ## Установка
 
@@ -39,9 +48,11 @@
 
 В настольном Shelter десять пресетов. При первом запуске активен **Джарвис**. Доступны также Пиппа, Юки, Акай, Вейн, Мандзю, Цукуёми, Кьют, Яманэко и Мику. Пресеты меняют имя вызова, голос и характер. Выбор сохраняется после обновления.
 
-![Каталог Shelter: первыми идут Джарвис, Пиппа и Юки](../media/shelter-personas.webp)
+![Каталог Shelter: первыми идут Джарвис, Пиппа и Юки](../media/shelter-personas-ru.webp)
 
-![Другие персонажи Shelter и их портреты](../media/shelter-personas-more.webp)
+![Другие персонажи Shelter и их портреты](../media/shelter-personas-more-ru.webp)
+
+На первом скриншоте показана локальная установка с подключёнными 3D-обликами. У каждого встроенного персонажа есть портрет или реактор Джарвиса.
 
 3D-облики Юки, Вейна, Мандзю и Цукуёми входят в комплект. Оригинальный облик Пиппы можно скачать у автора и подключить с её карточки. На совместимой видеокарте NVIDIA установка фирменного голоса скачивает обученный профиль Джарвиса v4 и использует встроенный образец голоса Юки и Пиппы. [Настройка персонажей](GUIDE.md) · [Авторы и лицензии](THIRD_PARTY.md)
 

@@ -21,6 +21,8 @@
   },
   "avatar": {
     "type": "hud",
+    "preview": "preview.png",
+    "fps": 20,
     "source": "https://booth.pm/ja/items/3752943",
     "credit": "Akai © Shugan."
   }

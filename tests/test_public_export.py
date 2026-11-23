@@ -55,6 +55,17 @@ class PublicExport(unittest.TestCase):
                              {target / "personas" / persona_id / "appearance.vrm" for persona_id in module.PUBLIC_MODELS})
             self.assertTrue((target / "personas/jarvis/voice.wav").is_file())
             self.assertFalse(any((target / "personas").rglob("*.safetensors")))
+            bundle = json.loads((target / "app/src-tauri/tauri.conf.json").read_text(encoding="utf-8"))
+            resources = set(bundle["bundle"]["resources"].values())
+            for persona_id in (item for item in module.PUBLIC_PRESETS if item != "jarvis"):
+                with self.subTest(portrait=persona_id):
+                    folder = target / "personas" / persona_id
+                    profile = json.loads((folder / "persona.json").read_text(encoding="utf-8"))
+                    self.assertEqual(profile["avatar"]["preview"], "preview.png")
+                    self.assertGreater((folder / "preview.png").stat().st_size, 0)
+                    self.assertIn(f"core/personas/{persona_id}/preview.png", resources)
+            for name in ("windows", "linux", "android", "android-local"):
+                self.assertTrue((target / "docs/media" / f"download-{name}.png").is_file())
             for preset in (target / "personas").glob("*/persona.json"):
                 voice = json.loads(preset.read_text(encoding="utf8")).get("voice", {})
                 self.assertEqual(voice.get("reference"), "voice.wav" if preset.parent.name == "anime" else None)

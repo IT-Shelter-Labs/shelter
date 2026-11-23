@@ -4,9 +4,18 @@
 
 ![Shelter 封面，展示桌面界面及 Pippa、Yuki、Jarvis 和 Manju](../media/shelter-cover-characters.webp)
 
+<p align="center">
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="下载 Windows 10/11 x64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="下载 Linux x86_64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="下载 Android Companion APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="下载 Android Local APK"></a>
+</p>
+
+[游戏模组 ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Jarvis v4 语音权重](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [所有版本](https://github.com/IT-Shelter-Labs/shelter/releases)
+
 Shelter 是一款适用于 Windows、Linux 和 Android 的开源语音助手。你可以启动应用、控制音乐、设置提醒、运行工作流，也可以与本地或云端模型聊天。在桌面端，用俄语说出当前角色的唤醒词，或点击 **Speak**（说话）。
 
-[下载](https://github.com/IT-Shelter-Labs/shelter/releases) · [使用与开发指南](GUIDE.md) · [IT Shelter Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [支持项目](https://t.me/itshelter_bot?start=donate)
+[使用与开发指南](GUIDE.md) · [IT Shelter Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [支持项目](https://t.me/itshelter_bot?start=donate)
 
 ## 安装
 
@@ -38,6 +47,8 @@ Shelter 是一款适用于 Windows、Linux 和 Android 的开源语音助手。�
 ![Shelter 角色目录，Jarvis、Pippa 和 Yuki 排在最前](../media/shelter-personas.webp)
 
 ![其他角色卡片及头像预览](../media/shelter-personas-more.webp)
+
+第一张截图来自已导入可选 3D 外观的本地安装。桌面版中的每个内置角色都自带头像，Jarvis 使用反应堆图案。
 
 Shelter 自带 Yuki、Vain、Manju 和 Tsukuyomi 的 3D 外观。Pippa 的原版外观可从作者处下载，再通过角色卡导入。使用兼容的 NVIDIA 显卡时，角色语音设置会下载训练好的 Jarvis v4 配置，并为 Yuki 和 Pippa 使用内置声音样本。[角色设置](GUIDE.md) · [素材署名](THIRD_PARTY.md)
 

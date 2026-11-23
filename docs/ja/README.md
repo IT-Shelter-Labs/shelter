@@ -4,9 +4,18 @@
 
 ![デスクトップ画面とピッパ、ユキ、ジャーヴィス、マンジュを描いた Shelter のカバー](../media/shelter-cover-characters.webp)
 
+<p align="center">
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="../media/download-windows.png" width="190" height="58" alt="Windows 10/11 x64 をダウンロード"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="../media/download-linux.png" width="190" height="58" alt="Linux x86_64 をダウンロード"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="../media/download-android.png" width="190" height="58" alt="Android Companion APK をダウンロード"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="../media/download-android-local.png" width="190" height="58" alt="Android Local APK をダウンロード"></a>
+</p>
+
+[ゲーム用 MOD の ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [ジャーヴィス v4 の音声モデル](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [すべてのリリース](https://github.com/IT-Shelter-Labs/shelter/releases)
+
 Shelter は Windows、Linux、Android 向けのオープンソース音声アシスタントです。アプリの起動、音楽の操作、リマインダーの設定、ワークフローの実行、ローカルモデルやクラウドモデルとの会話ができます。デスクトップでは、選択中のキャラクターの呼びかけ名をロシア語で発音するか、**Speak**（話す）を押します。
 
-[ダウンロード](https://github.com/IT-Shelter-Labs/shelter/releases) · [利用・開発ガイド](GUIDE.md) · [IT Shelter の Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [プロジェクトを支援](https://t.me/itshelter_bot?start=donate)
+[利用・開発ガイド](GUIDE.md) · [IT Shelter の Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [プロジェクトを支援](https://t.me/itshelter_bot?start=donate)
 
 ## インストール
 
@@ -38,6 +47,8 @@ Shelter は Windows、Linux、Android 向けのオープンソース音声アシ
 ![ジャーヴィス、ピッパ、ユキが先頭に並ぶ Shelter のキャラクター一覧](../media/shelter-personas.webp)
 
 ![キャラクターカードとアバターのプレビュー](../media/shelter-personas-more.webp)
+
+最初の画像は追加の 3D モデルを設定したローカル環境です。すべてのデスクトップ用プリセットにポートレート、またはジャーヴィスのリアクターが付属します。
 
 ユキ、ヴェイン、マンジュ、つくよみちゃんの 3D モデルは同梱されています。ピッパのオリジナルモデルは作者からダウンロードし、カードから追加できます。対応する NVIDIA GPU では、キャラクターボイスのセットアップで学習済みのジャーヴィス v4 を取得し、ユキとピッパには同梱の音声サンプルを使用します。[キャラクターの設定](GUIDE.md) · [素材クレジット](THIRD_PARTY.md)
 

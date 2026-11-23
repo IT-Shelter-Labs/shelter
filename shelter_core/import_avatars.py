@@ -174,8 +174,10 @@ def attach_builtin(persona_id, filename):
         avatar.update(type="vrm", model=str(model))
         with model.open("rb") as file:
             original = hashlib.file_digest(file, "sha256").hexdigest().startswith(profile["id"][9:])
-        if not original or not avatar.get("preview"):
+        if not original:
             avatar.pop("preview", None)
+            avatar.pop("preview_kind", None)
+        if avatar.get("preview_kind") == "illustration" or not avatar.get("preview"):
             portrait = Path(work) / "preview.png"
             try:
                 _thumbnail(model, portrait)
@@ -183,6 +185,7 @@ def attach_builtin(persona_id, filename):
                 pass  # Thumbnail metadata is optional.
             if portrait.is_file():
                 avatar["preview"] = str(portrait)
+                avatar.pop("preview_kind", None)
         with personas._storage_lock:
             return personas.get(profile["id"]) or personas.save(profile)
 

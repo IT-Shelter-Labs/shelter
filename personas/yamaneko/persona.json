@@ -21,6 +21,8 @@
   },
   "avatar": {
     "type": "hud",
+    "preview": "preview.png",
+    "preview_kind": "illustration",
     "source": "https://booth.pm/en/items/5305879",
     "credit": "yamaneko_White © yamaron."
   }

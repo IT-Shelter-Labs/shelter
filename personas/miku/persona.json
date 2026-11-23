@@ -20,6 +20,9 @@
   },
   "avatar": {
     "type": "hud",
+    "preview": "preview.png",
+    "fps": 20,
+    "preview_kind": "illustration",
     "source": "https://booth.pm/en/items/6290737",
     "credit": "MW Miku © Misfitworks. Проверьте условия автора перед использованием."
   }

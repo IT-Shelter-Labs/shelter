@@ -32,7 +32,6 @@
 <style>
   .portrait { position: relative; height: 190px; display: grid; place-items: center; overflow: hidden; border-radius: 12px;
     background: radial-gradient(ellipse at 50% 30%, #29394b, #101722 75%); margin-bottom: 6px; }
-  img { width: 100%; height: 100%; min-height: 0; padding: 8px 12px 0; object-fit: contain; object-position: center bottom;
-    mask-image: linear-gradient(to bottom, #000 92%, transparent 100%); }
+  img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
   .placeholder { display: grid; justify-items: center; gap: 8px; padding: 12px; color: var(--text-2); text-align: center; font-size: 12px; }
 </style>

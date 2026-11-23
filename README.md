@@ -4,9 +4,18 @@
 
 ![Shelter with its desktop interface, Pippa, Yuki, Jarvis, and Manju](docs/media/shelter-cover-characters.webp)
 
+<p align="center">
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-windows-x64-setup.exe"><img src="docs/media/download-windows.png" width="190" height="58" alt="Download Windows 10/11 x64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.6/Shelter-0.1.0-alpha.6-linux-x86_64.tar.gz"><img src="docs/media/download-linux.png" width="190" height="58" alt="Download Linux x86_64"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-companion-test.apk"><img src="docs/media/download-android.png" width="190" height="58" alt="Download Android Companion APK"></a>
+  <a href="https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-android-local-test.apk"><img src="docs/media/download-android-local.png" width="190" height="58" alt="Download Android Local APK"></a>
+</p>
+
+[Game mods ZIP](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.3/Shelter-0.1.0-alpha.3-game-mods.zip) · [Jarvis v4 voice weights](https://github.com/IT-Shelter-Labs/shelter/releases/download/v0.1.0-alpha.5/Shelter-Jarvis-voice-v4.safetensors) · [All releases](https://github.com/IT-Shelter-Labs/shelter/releases)
+
 Shelter is an open-source voice assistant for Windows, Linux, and Android. Open apps, control music, set reminders, run workflows, or chat with a local or cloud model. On desktop, say the active character’s wake word in Russian or click **Speak**.
 
-[Downloads](https://github.com/IT-Shelter-Labs/shelter/releases) · [Documentation](docs/README.md) · [IT Shelter on Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [Support the project](https://t.me/itshelter_bot?start=donate)
+[Documentation](docs/README.md) · [IT Shelter on Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [Support the project](https://t.me/itshelter_bot?start=donate)
 
 ## Install
 
@@ -38,6 +47,8 @@ The desktop app has ten character presets. **Jarvis** is selected on first launc
 ![Shelter character catalog with Jarvis first, followed by Pippa and Yuki](docs/media/shelter-personas.webp)
 
 ![More character cards and their avatar previews](docs/media/shelter-personas-more.webp)
+
+The first screenshot shows a local installation with optional 3D appearances connected. Every desktop preset includes a catalog portrait or the Jarvis reactor.
 
 Shelter includes 3D appearances for Yuki, Vain, Manju, and Tsukuyomi. To use Pippa’s original appearance, download the creator’s archive and attach it from her card. On a compatible NVIDIA GPU, the character voice setup downloads the trained Jarvis v4 profile and uses the bundled voice sample for Yuki and Pippa. See the [character guide](docs/GUIDE.md) and [asset credits](THIRD_PARTY.md).
 
