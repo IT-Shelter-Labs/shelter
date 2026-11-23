@@ -17,6 +17,11 @@ class PublicExport(unittest.TestCase):
         self.assertIn("main.py",paths);self.assertIn("native/src/lib.rs",paths)
         self.assertIn("shelter_core/control.py", paths)
         self.assertNotIn("control.py", paths)
+        self.assertIn("docs/README.md", paths)
+        self.assertIn("docs/GUIDE.md", paths)
+        for language in ("ru", "ja", "zh-CN"):
+            for name in ("README.md", "GUIDE.md", "CONTRIBUTING.md", "SECURITY.md", "THIRD_PARTY.md"):
+                self.assertIn(f"docs/{language}/{name}", paths)
         for path in paths:
             self.assertFalse(path.startswith(("data/","models/","datasets/","reports/",".git/","DwnldedModels/",".review_tools/")),path)
             self.assertNotIn("node_modules",path.split("/"));self.assertNotIn("target",path.split("/"))

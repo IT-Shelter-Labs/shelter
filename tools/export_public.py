@@ -9,7 +9,9 @@ SKIP = {
     "node_modules", "target", "dist", "build", ".gradle", ".kotlin", ".cxx", "__pycache__", "gen", ".git", ".idea",
     "data", "secrets", "models", "logs", "run", "release", "reports", "datasets", "runtime",
 }
-DOCS = {"DEVELOPMENT.md","DESKTOP_INPUT.md","PLATFORMS.md","LINUX.md","ANDROID_CLIENT.md","AVATARS.md","COMPANION.md","CLOUD_MODELS.md","GAMES.md","MINECRAFT.md","SCENARIOS.md","PLUGINS.md","PUBLIC_RELEASE.md","RUNTIME.md"}
+DOCS = {"README.md","GUIDE.md","DEVELOPMENT.md","DESKTOP_INPUT.md","PLATFORMS.md","LINUX.md","ANDROID_CLIENT.md","AVATARS.md","COMPANION.md","CLOUD_MODELS.md","GAMES.md","MINECRAFT.md","SCENARIOS.md","PLUGINS.md","PUBLIC_RELEASE.md","RUNTIME.md"}
+DOC_LOCALES = ("ru", "ja", "zh-CN")
+TRANSLATED_DOCS = ("README.md", "GUIDE.md", "CONTRIBUTING.md", "SECURITY.md", "THIRD_PARTY.md")
 ROOT_FILES = {"README.md","LICENSE","SECURITY.md","CONTRIBUTING.md","THIRD_PARTY.md",".gitignore","config.public.yaml","requirements.txt","requirements-lock.windows.txt","requirements-optional.txt","requirements-tts.txt","app_version.py","main.py","setup_tool.py"}
 DOC_MEDIA = ("shelter-cover-characters.webp", "shelter-desktop.webp", "shelter-personas.webp",
              "shelter-personas-more.webp", "shelter-android.webp")
@@ -30,6 +32,11 @@ def selected(root=ROOT):
             }: yield path
     for name in DOCS:
         if (root/"docs"/name).is_file(): yield root/"docs"/name
+    for locale in DOC_LOCALES:
+        for name in TRANSLATED_DOCS:
+            path = root / "docs" / locale / name
+            if path.is_file():
+                yield path
     for name in DOC_MEDIA:
         image = root / "docs" / "media" / name
         if image.is_file():

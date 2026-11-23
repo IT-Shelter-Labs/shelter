@@ -1,44 +1,19 @@
-# Сторонние компоненты
+# Third-party notices
 
-- Движения Quaternius и Mesh2Motion: CC0. Источники и контрольные суммы:
-  `app/public/animations/NOTICE.md`.
-- Tauri, Svelte, Three.js, @pixiv/three-vrm, Lucide: версии зафиксированы в
-  Cargo.lock и package-lock.json; условия находятся в соответствующих пакетах.
-- Нативный ресемплер реализует полифазный FIR с окном Kaiser. Проверка
-  эквивалентности использует SciPy как эталон; код SciPy в библиотеку не включён.
-- Модели GigaAM, vosk, Piper, Qwen, Ollama имеют собственные условия. Веса и
-  личные клоны голосов не входят в публичный снимок исходников.
-- Android использует [LiteRT-LM 0.19.1](https://github.com/google-ai-edge/LiteRT-LM/tree/v0.19.1),
-  [Vosk Android 0.3.75](https://github.com/alphacep/vosk-api) и
-  [JNA 5.18.1](https://github.com/java-native-access/jna/tree/5.18.1).
-  Vosk и LiteRT-LM распространяются под Apache 2.0. JNA доступна под
-  Apache 2.0 или LGPL 2.1. Загружаемые [Qwen3 0.6B](https://huggingface.co/litert-community/Qwen3-0.6B-int4)
-  и [русский пакет Vosk](https://alphacephei.com/vosk/models) используют Apache 2.0.
-- Пользовательские VRM, аксессуары и голоса не становятся ресурсами,
-  разрешёнными для распространения вместе с приложением автоматически.
-- Русские названия стран в справочнике погоды взяты из [Unicode CLDR](https://github.com/unicode-org/cldr-json)
-  ([Unicode License v3](https://www.unicode.org/license.txt)). Столицы и английские
-  названия взяты из [GeoNames countryInfo](https://download.geonames.org/export/dump/countryInfo.txt)
-  ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Справочник объединяет
-  данные по коду страны и опускает строки без столицы.
+**English** · [Русский](docs/ru/THIRD_PARTY.md) · [日本語](docs/ja/THIRD_PARTY.md) · [简体中文](docs/zh-CN/THIRD_PARTY.md)
 
-- Функции выбора оружия и рыбалки адаптированы из Mindcraft и раннего форка
-  MinePal. Уведомления MIT находятся в `minecraft/MINDCRAFT-LICENSE` и
-  `minecraft/MINEPAL-LICENSE`.
-- На снимке панели «Персонаж» показана модель Юки на основе
-  VRM1_Constraint_Twist_Sample © 2022 pixiv Inc. Её портрет использован
-  как референс для обложки README. Условия заданы в
-  метаданных модели и [VRM Public License 1.0](https://vrm.dev/licenses/1.0/).
-- Портрет Пиппы — рендер общедоступной модели **Pippa** © loulou_yurika
-  (ねこのゆりか). Портрет использован для обложки README; 3D-файл доступен у автора.
-  [Модель и условия автора](https://booth.pm/ja/items/4613310).
-- Портрет Кьют — рендер **Cute Model** © Jessair. [Модель и условия автора](https://booth.pm/ja/items/7100270).
-- Портрет Цукуёми — рендер **Tsukuyomi-chan, тип A** © Rei Yumesaki. Это
-  общедоступный персонаж, реплики Shelter не относятся к официальному проекту.
-  [Модель и условия автора](https://tyc.rei-yumesaki.net/material/avatar/3d-a/).
-- 3D-облик Мандзю (`personas/manju/appearance.vrm`) — **MeowManju** © MinaraiNyanko.
-  Рендер Мандзю использован для обложки README.
-  Автор разрешает модификацию, повторное распространение и коммерческое использование,
-  кроме использования в политических целях. [Условия на странице автора](https://booth.pm/ko/items/6405885).
+- Quaternius and Mesh2Motion animations use CC0. Sources and checksums are listed in [the animation notices](app/public/animations/NOTICE.md).
+- Tauri, Svelte, Three.js, @pixiv/three-vrm, and Lucide versions are pinned in Cargo.lock and package-lock.json. See each project or package for its license.
+- The native resampler uses a polyphase FIR filter with a Kaiser window. Tests compare against SciPy as a reference. The library contains no SciPy code.
+- GigaAM, Vosk, Piper, Qwen, and Ollama have their own terms. Public source snapshots omit weights and personal voice clones.
+- Android uses [LiteRT-LM 0.19.1](https://github.com/google-ai-edge/LiteRT-LM/tree/v0.19.1), [Vosk Android 0.3.75](https://github.com/alphacep/vosk-api), and [JNA 5.18.1](https://github.com/java-native-access/jna/tree/5.18.1). Vosk and LiteRT-LM are Apache 2.0. JNA is available under Apache 2.0 or LGPL 2.1. The downloadable [Qwen3 0.6B model](https://huggingface.co/litert-community/Qwen3-0.6B-int4) and [Russian Vosk pack](https://alphacephei.com/vosk/models) use Apache 2.0.
+- Verify that your imported VRM, accessories, and voice samples permit redistribution before sharing them.
+- Russian country names come from [Unicode CLDR](https://github.com/unicode-org/cldr-json), under the [Unicode License v3](https://www.unicode.org/license.txt). The capitals and English names come from [GeoNames countryInfo](https://download.geonames.org/export/dump/countryInfo.txt), under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The weather tables join rows by country code and omit entries without a capital.
+- Weapon selection and fishing logic were adapted from Mindcraft and an early MinePal fork. See the [Mindcraft MIT notice](minecraft/MINDCRAFT-LICENSE) and [MinePal MIT notice](minecraft/MINEPAL-LICENSE).
+- Yuki’s portrait and the README cover reference **VRM1_Constraint_Twist_Sample** © 2022 pixiv Inc. The terms are set in the model metadata and the [VRM Public License 1.0](https://vrm.dev/licenses/1.0/).
+- Pippa’s portrait and the README cover reference **Pippa** © loulou_yurika (ねこのゆりか), a publicly available model. The creator distributes the 3D file. [Model and terms](https://booth.pm/ja/items/4613310)
+- Cute’s portrait depicts **Cute Model** © Jessair. [Model and terms](https://booth.pm/ja/items/7100270)
+- Tsukuyomi’s portrait depicts **Tsukuyomi-chan, Type A** © Rei Yumesaki. The asset is available to the public. Dialogue generated by Shelter is separate from the official project. [Model and terms](https://tyc.rei-yumesaki.net/material/avatar/3d-a/)
+- Manju’s included VRM and the README cover reference **MeowManju** © MinaraiNyanko. The creator allows modification, redistribution, and commercial use and excludes political use. [Model and terms](https://booth.pm/ko/items/6405885)
 
-Собственный код Shelter распространяется по [MIT](LICENSE).
+Shelter’s own code uses the [MIT license](LICENSE).

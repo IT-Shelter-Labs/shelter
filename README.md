@@ -1,94 +1,73 @@
 # Shelter
 
-![Обложка Shelter с главным окном, Пиппой, Юки, Джарвисом и Мандзю](docs/media/shelter-cover-characters.webp)
+**English** · [Русский](docs/ru/README.md) · [日本語](docs/ja/README.md) · [简体中文](docs/zh-CN/README.md)
 
-Голосовой ассистент для компьютера и телефона. Открывайте приложения, управляйте музыкой, ставьте напоминания, запускайте сценарии и разговаривайте с выбранной моделью. На ПК можно сказать имя выбранного персонажа или нажать «Говорить».
+![Shelter with its desktop interface, Pippa, Yuki, Jarvis, and Manju](docs/media/shelter-cover-characters.webp)
 
-[Скачать](https://github.com/IT-Shelter-Labs/shelter/releases) · [Установка](#установка) · [Персонажи](#персонажи) · [Telegram IT Shelter](https://t.me/+tqB8b6h4JbYwZWVi) · [Поддержать проект](https://t.me/itshelter_bot?start=donate)
+Shelter is an open-source voice assistant for Windows, Linux, and Android. Open apps, control music, set reminders, run workflows, or chat with a local or cloud model. On desktop, say the active character’s wake word in Russian or click **Speak**.
 
-## Установка
+[Downloads](https://github.com/IT-Shelter-Labs/shelter/releases) · [Documentation](docs/README.md) · [IT Shelter on Telegram](https://t.me/+tqB8b6h4JbYwZWVi) · [Support the project](https://t.me/itshelter_bot?start=donate)
 
-Версия `0.1.0-alpha.3`. У каждой сборки свои возможности и требования.
+## Install
 
-| Платформа | Пакет | Первый запуск |
+| Platform | Package | First launch |
 | --- | --- | --- |
-| **Windows 10/11 x64** | Установщик `Shelter-0.1.0-alpha.3-windows-x64-setup.exe` | Выберите папку. Мастер поможет скачать компоненты распознавания и голоса. |
-| **Linux x86_64** | Архив `Shelter-0.1.0-alpha.3-linux-x86_64.tar.gz` | Распакуйте и запустите `python3 tools/install_linux.py`. Графическая оболочка использует GTK и WebKitGTK. См. [инструкцию для Linux](docs/LINUX.md). |
-| **Android 8+** | `Shelter` | Облачная беседа, простые команды и подключение к своему ПК. |
-| **Android 12+** | `Shelter Local` | Всё из обычной сборки и отдельная загрузка модели для беседы на устройстве. |
+| **Windows 10/11 x64** | `Shelter-<version>-windows-x64-setup.exe` | Run the installer and follow the setup wizard to download speech components. |
+| **Linux x86_64** | `Shelter-<version>-linux-x86_64.tar.gz` | Extract the archive and run `python3 tools/install_linux.py --light-recognition`. Linux support is experimental. |
+| **Android 8+** | **Shelter**, Companion APK | Use cloud chat or pair the phone with Shelter on your PC. |
+| **Android 12+** | **Shelter Local**, Local APK | Also supports on-device chat. Download compatible model weights from the app. |
 
-Модели скачиваются отдельно. Для Android в комплекте релиза есть
-устанавливаемые тестовые APK и сборки Release для подписи издателя.
-[Подробнее про Android](docs/ANDROID_CLIENT.md).
+Preview APKs are signed with a debug key. Model weights are downloaded separately. See the [installation and Android sections](docs/GUIDE.md) for requirements and first-run steps.
 
-## Что умеет
+## What Shelter can do
 
-- **Голос и текст.** Русское распознавание на ПК через GigaAM или Vosk, голосовой ответ и прерывание. Приложение на русском и английском.
-- **Действия на компьютере.** Программы, окна, громкость, музыка, таймеры, диктовка и редактирование выделенного текста.
-- **Сценарии.** Собирайте цепочки действий, вызывайте их голосом или запускайте по расписанию. [Примеры](docs/SCENARIOS.md).
-- **Модели и проекты.** Выбирайте локальные или облачные модели для чата, зрения, голоса и изображений. История, память и материалы проектов управляются в приложении. [Подключение моделей](docs/CLOUD_MODELS.md).
-- **Игры.** Напарник Minecraft Java Edition с задачами и игровым инвентарём на поддерживаемых серверах, производство Factorio и помощь в кампании Hearts of Iron IV. [Совместимость игр](docs/GAMES.md).
-- **Подключения.** Умный дом, OBS, Telegram, MCP и управление своим ПК с телефона.
+- **Voice and text.** Use Russian speech recognition on desktop through GigaAM or Vosk, listen to spoken replies, and stop an active request.
+- **Desktop controls and workflows.** Open apps, control media and volume, edit text, and build workflows that run from a button, voice command, schedule, or event.
+- **Models and projects.** Choose separate models for chat, complex tasks, screen understanding, speech, and image generation. Manage conversations, memory, and project materials in the app.
+- **Games.** Connect a companion to a supported Minecraft Java Edition world, track crafting tasks in Factorio, or use campaign tools and screen analysis in Hearts of Iron IV.
+- **Connections.** Pair your phone and configure integrations for smart home devices, OBS, Telegram, MCP, and extensions.
 
-## Интерфейс
+The app interface supports Russian and English. The Japanese and Chinese translations cover the documentation.
 
-![Главное окно Shelter с голосовым вводом, быстрыми сценариями и таймерами](docs/media/shelter-desktop.webp)
+## Desktop interface and characters
 
-## Персонажи
+![Shelter desktop home with voice input, workflows, and reminders](docs/media/shelter-desktop.webp)
 
-В настольном Shelter десять пресетов. При первом запуске активна **Пиппа**.
-Доступны также Джарвис, Юки, Акай, Вейн, Мандзю, Цукуёми, Кьют, Яманэко и Мику.
-Пресеты меняют имя вызова, характер и голос. Выбранный персонаж сохраняется при обновлении.
+The desktop app has ten presets. **Pippa** is active on first launch. Jarvis, Yuki, Akai, Vain, Manju, Tsukuyomi, Cute, Yamaneko, and Miku are also available. Presets change the wake word, voice, and personality. Your selection is saved across updates.
 
-![Каталог персонажей Shelter, активна Пиппа](docs/media/shelter-personas.webp)
+![Shelter character catalog with Pippa selected](docs/media/shelter-personas.webp)
 
-![Мандзю, Мику, Цукуёми и Яманэко в каталоге Shelter](docs/media/shelter-personas-more.webp)
+![Manju, Miku, Tsukuyomi, and Yamaneko in the catalog](docs/media/shelter-personas-more.webp)
 
-В комплект входит 3D-облик кота Мандзю. Юки скачивает модель pixiv при выборе.
-Для Пиппы показан портрет автора, а её 3D-файл можно скачать на BOOTH и
-подключить в редакторе. [Подключение обликов](docs/AVATARS.md) · [Авторы и условия](THIRD_PARTY.md).
+Manju’s 3D model is included. Shelter downloads the pixiv model for Yuki when selected. Pippa comes with a portrait and a link to the original VRM on the creator’s page. See the [character guide](docs/GUIDE.md) and [asset credits](THIRD_PARTY.md).
 
-## Собрать из исходников
+## Build from source
 
-Для Windows понадобятся Python 3.11, Node.js 22.12+, Rust, MSVC Build Tools и WebView2.
+On Windows, install Python 3.11, Node.js 22.12 or later, Rust, MSVC Build Tools, and WebView2. Run these commands from the repository root in PowerShell.
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements-lock.windows.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.windows.txt
+$env:Path = "$(Resolve-Path .\.venv\Scripts);$env:Path"
 npm --prefix app ci
 npm --prefix app run desktop:build
 ```
 
-Запустите `app/src-tauri/target/release/Jarvis.exe`. Имя исполняемого файла
-сохраняет совместимость с прежними локальными запусками, а само окно и
-установщик называются Shelter. Для сборки установщика используйте
-`npm --prefix app run desktop:bundle`.
+Run `app/src-tauri/target/release/Jarvis.exe`. The executable keeps its original filename for compatibility. To build the Windows installer, run `npm --prefix app run desktop:bundle`.
 
-[Разработка](docs/DEVELOPMENT.md) · [Платформы](docs/PLATFORMS.md) ·
-[Расширения](docs/PLUGINS.md) · [Вклад в проект](CONTRIBUTING.md)
+| Directory | Contents |
+| --- | --- |
+| `shelter_core/` | Python core for speech, models, actions, and integrations |
+| `app/`, `native/`, `hud/` | Svelte and Tauri desktop app, native audio, and Windows HUD |
+| `android/` | Kotlin app for both Android variants |
+| `personas/` | Built-in presets and distributable artwork |
+| `minecraft/`, `games/` | Game clients, adapters, and mods |
+| `tests/`, `tools/`, `docs/` | Tests, build tools, and documentation |
 
-Основные папки проекта
+[Build and test instructions](docs/GUIDE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-- `shelter_core/` — Python-ядро, голос, модели, сценарии и подключения.
-- `app/` — окно Svelte и оболочка Tauri для Windows и Linux.
-- `android/` — мобильное приложение.
-- `personas/` — встроенные пресеты и разрешённые для поставки материалы.
-- `minecraft/`, `games/` — игровые клиенты, адаптеры и моды.
-- `tests/`, `tools/`, `docs/` — проверки, инструменты сборки и документация.
+## Data and license
 
-## Данные и лицензия
+Local speech recognition runs on the device. Features that use search, weather, or cloud models send the requests they need to the selected services. Local models, voice samples, credentials, and project data stay out of public source exports.
 
-Локальное распознавание выполняется на устройстве. Сетевые действия, такие как
-поиск, погода и запросы к облачной модели, обращаются к выбранным сервисам.
-Личные модели, голоса, ключи и рабочие данные доступны в папке установки.
-
-Код проекта распространяется по [MIT](LICENSE). У сторонних компонентов
-свои условия. [Атрибуция и лицензии](THIRD_PARTY.md).
-
-## English overview
-
-Shelter is a voice-first assistant for Windows, Linux and Android. It runs
-desktop commands and workflows, connects to local or cloud models, and supports
-custom personas and game integrations. Windows is the main desktop target
-and Linux support is experimental. The interface is available in English
-and Russian.
+The Shelter code is released under the [MIT license](LICENSE). Third-party components and artwork have their own terms. [Third-party notices](THIRD_PARTY.md)

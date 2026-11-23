@@ -1,9 +1,7 @@
-# Участие в разработке
+# Contributing to Shelter
 
-Используйте отдельную ветку. Опишите проблему, результат изменения и проверки.
-Для ошибок укажите ОС, режим голоса, модели, шаги воспроизведения и очищенный
-фрагмент журнала. Команды проверок находятся в README.
+**English** · [Русский](docs/ru/CONTRIBUTING.md) · [日本語](docs/ja/CONTRIBUTING.md) · [简体中文](docs/zh-CN/CONTRIBUTING.md)
 
-Аудиоизменения должны сохранять частоты, PCM, отмену и задержку первого звука.
-Проверяйте нативный и резервный пути. Не коммитьте модели, токены, личную память
-и образцы голосов. Интерфейс проверяйте и в нативной сборке, не только в браузере.
+Work on a separate branch. Describe the problem, what changed, and how you tested it. For a bug report, include the OS, voice mode, model, reproduction steps, and a redacted log excerpt. [Build and test commands](docs/GUIDE.md)
+
+Audio changes should preserve the sample rates, PCM format, cancellation, and time to first audio. Exercise both the native implementation and the fallback. Test UI changes in the native build as well as the browser development bridge. Keep model weights, credentials, personal memory, and voice samples out of commits.
